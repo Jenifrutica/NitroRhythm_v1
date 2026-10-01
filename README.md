@@ -145,6 +145,36 @@ flatpak run org.blender.Blender --background --python Tools/blender/generate_kar
 
 ---
 
+## 📚 Documentación
+
+Toda la documentación del proyecto está dentro de este repositorio, en la carpeta
+**[`Docs/`](Docs/)**:
+
+- 📋 **[Cuestionario de prueba](Docs/Evidencias/GA5-AA1-EV01_Cuestionario.md)** (10 preguntas).
+- 📝 **[Guía para 5 usuarios](Docs/Evidencias/Guia_5_Usuarios.md)**.
+- 📊 **[Informe de hallazgos](Docs/Evidencias/GA5-AA2-EV01_Informe_Hallazgos.md)** con analítica.
+- 🔧 **[Registro de cambios](Docs/Evidencias/GA5-AA3-EV01_Registro_Cambios.md)** (antes/después).
+- 🖼️ **[Infografía comparativa](Docs/Evidencias/GA5-AA4-EV01_Infografia_Comparativa.md)**.
+- 🗺️ **[Plan de ejecución](Docs/Evidencias/PLAN_EJECUCION.md)**.
+- 📈 **[Analítica](Docs/Analitica/)** (respuestas CSV, gráficos y resumen).
+- 📸 **[Capturas](Docs/Capturas/Despues/)** del prototipo final.
+- 🧰 **[Scripts de herramientas](Docs/Tools/)** (Blender y documentos).
+
+Cada documento está en `.md`, `.docx` y `.pdf`.
+
+## ⬇️ Descargar la build jugable
+
+La build WebGL está en la sección **[Releases](../../releases)** del repositorio
+(archivo `NitroRhythm_WebGL.zip`). Para jugarla en local:
+
+```bash
+unzip NitroRhythm_WebGL.zip -d NitroRhythm
+cd NitroRhythm && python3 -m http.server 8080
+# Abrir http://localhost:8080
+```
+
+---
+
 ## 🧪 Estado del proyecto
 
 - [x] 4 escenas + UI Canvas/TMP.
