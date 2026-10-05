@@ -66,6 +66,7 @@ anexan; el detalle por pregunta está en `Analitica/reporte_google_forms.md`.
 | 10 | Mecánicas | 4.40 | Fortaleza |
 
 **Archivos anexos**
+- `Analitica/respuestas_raw.csv` — exportación original del formulario de Google Forms.
 - `Analitica/reporte_google_forms.md` — resumen por pregunta (estilo Google Forms).
 - `Analitica/respuestas.csv` — respuestas crudas (exportación del formulario).
 - `Analitica/analitica_preguntas.png`, `analitica_usuarios.png`, `distribucion_respuestas.png`.

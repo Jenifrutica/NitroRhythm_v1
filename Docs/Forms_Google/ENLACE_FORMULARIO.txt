@@ -1,16 +1,3 @@
-ENLACES DEL FORMULARIO — Prueba de funcionalidad NitroRhythm
+ENLACE DEL FORMULARIO (pegar aquí):
 
-1) Enlace público para responder:
-   https://docs.google.com/forms/d/e/1FAIpQLSeePkpwiZbBUEjVSZMQqB_Svr0BzVuGsiC_B5i-UrjwJA_rYg/viewform
-
-2) Hoja de respuestas (Google Sheets):
-   https://docs.google.com/spreadsheets/d/1Z-BRPvt6kR823RYpHda_g-1CGeblpPiVRACWpRiF83M/edit
-
-3) Edición del formulario:
-   https://docs.google.com/forms/d/1_KbBD7KnViyIoxIRARNlxvW5JvudzN_BEeQ4xMlS68o/edit
-
-PARA USAR LOS DATOS REALES:
-- En la hoja de respuestas: Archivo → Descargar → Valores separados por comas (.csv).
-- Guarda el archivo como:  ~/Downloads/forms_responses.csv
-- Luego ejecuta:  python3 "SENA/NitroRythm/My project/Docs/Tools/docs/generate_analytics.py"
-  (el script detecta ese CSV automáticamente y regenera los gráficos y el reporte).
+https://forms.gle/________________
