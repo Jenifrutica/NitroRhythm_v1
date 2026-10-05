@@ -17,6 +17,8 @@ Prefijo común: `https://github.com/Jenifrutica/NitroRhythm_v1/blob/main/`
 | :-- | :-- |
 | Cuestionario (PDF) | `.../Docs/Evidencias/GA5-AA1-EV01_Cuestionario.pdf` |
 | Cuestionario (editable) | `.../Docs/Evidencias/GA5-AA1-EV01_Cuestionario.docx` |
+| **Formulario en Google Forms** | https://docs.google.com/forms/d/e/1FAIpQLSeePkpwiZbBUEjVSZMQqB_Svr0BzVuGsiC_B5i-UrjwJA_rYg/viewform |
+| **Hoja de respuestas** | https://docs.google.com/spreadsheets/d/1Z-BRPvt6kR823RYpHda_g-1CGeblpPiVRACWpRiF83M/edit |
 | Guía para los 5 usuarios | `.../Docs/Evidencias/Guia_5_Usuarios.pdf` |
 | Preguntas listas para Google Forms | `.../Docs/Forms_Google/PREGUNTAS_FORMULARIO.md` |
 | Reporte de analítica (estilo Forms) | `.../Docs/Analitica/reporte_google_forms.md` |
@@ -40,6 +42,7 @@ Prefijo común: `https://github.com/Jenifrutica/NitroRhythm_v1/blob/main/`
 | Registro de cambios (ronda 1) | `.../Docs/Evidencias/GA5-AA3-EV01_Registro_Cambios.pdf` |
 | Registro de cambios (ronda 2) | `.../Docs/Evidencias/GA5-AA3-EV01_Registro_Cambios_Ronda2.pdf` |
 | Registro de cambios (ronda 3) | `.../Docs/Evidencias/GA5-AA3-EV01_Registro_Cambios_Ronda3.pdf` |
+| Registro de cambios (ronda 4 — prueba con usuarios) | `.../Docs/Evidencias/GA5-AA3-EV01_Registro_Cambios_Ronda4.pdf` |
 | Justificación de controles | `.../Docs/Evidencias/GA5-AA3-EV01_Justificacion_Controles.pdf` |
 | Resultado de pruebas (40 en verde) | `.../Docs/Evidencias/RESULTADO_PRUEBAS.pdf` |
 | Escenas (4) | `.../Assets/Scenes/00_MainMenu.unity` … `03_Results.unity` |

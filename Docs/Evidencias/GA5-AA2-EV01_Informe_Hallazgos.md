@@ -6,6 +6,9 @@
 **Aprendiz:** Jenifer Daniela Urbano Córdoba
 **Ficha:** 3336511
 
+**Formulario aplicado (Google Forms):** <https://docs.google.com/forms/d/e/1FAIpQLSeePkpwiZbBUEjVSZMQqB_Svr0BzVuGsiC_B5i-UrjwJA_rYg/viewform>
+**Respuestas:** <https://docs.google.com/spreadsheets/d/1Z-BRPvt6kR823RYpHda_g-1CGeblpPiVRACWpRiF83M/edit>
+
 ---
 
 ## Tabla de contenido

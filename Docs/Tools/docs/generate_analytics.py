@@ -57,6 +57,57 @@ USERS = [
 ]
 
 rows = [{"usuario": u, "fecha": f, "r": r, "comentario": c} for (u, f, r, c) in USERS]
+
+
+def load_real_rows():
+    """Si existe un CSV exportado de Google Forms, lo usa en lugar de los ejemplos.
+
+    Busca en ~/Downloads/forms_responses.csv o Docs/Analitica/respuestas_raw.csv.
+    Formato: [Marca temporal, Nombre, P1..P10, Comentario]. Se detectan las 10
+    columnas numéricas por posición para tolerar el orden exacto de Forms.
+    """
+    candidates = [os.path.expanduser("~/Downloads/forms_responses.csv"),
+                  os.path.join(OUT, "respuestas_raw.csv")]
+    for path in candidates:
+        if not os.path.exists(path):
+            continue
+        try:
+            with open(path, encoding="utf-8-sig", newline="") as fh:
+                data = list(csv.reader(fh))
+        except Exception:
+            continue
+        if len(data) < 2:
+            continue
+        out = []
+        for row in data[1:]:
+            scores = None
+            start = 0
+            for i in range(len(row) - 9):
+                try:
+                    window = [int(float(row[i + k])) for k in range(10)]
+                except (ValueError, TypeError):
+                    continue
+                if all(1 <= s <= 5 for s in window):
+                    scores = window
+                    start = i
+                    break
+            if scores is None:
+                continue
+            name = row[1].strip() if len(row) > 1 and row[1].strip() else f"Usuario {len(out)+1}"
+            comment = row[start + 10].strip() if len(row) > start + 10 else ""
+            date = row[0].strip() if row else ""
+            out.append({"usuario": name, "fecha": date, "r": scores, "comentario": comment})
+        if out:
+            print(f"[analytics] Usando {len(out)} respuestas reales de {path}")
+            return out
+    return None
+
+
+real = load_real_rows()
+if real:
+    rows = real
+else:
+    print("[analytics] Sin CSV real; usando los 5 registros de ejemplo.")
 averages = [mean(row["r"][i] for row in rows) for i in range(10)]
 overall = mean(averages)
 
