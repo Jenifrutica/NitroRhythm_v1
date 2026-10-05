@@ -1,0 +1,6 @@
+<linker>
+  <!-- WebGL strips engine code that is only reached from native code. GameObject.CreatePrimitive(Plane)
+       (used by StageFactory for the neon floor) adds a MeshCollider, which logged
+       "Can't add component because class 'MeshCollider' doesn't exist!" in the web build. -->
+  <assembly fullname="UnityEngine.PhysicsModule" preserve="all"/>
+</linker>

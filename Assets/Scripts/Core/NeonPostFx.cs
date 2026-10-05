@@ -40,6 +40,24 @@ namespace NitroRhythm.Core
             EnableOnCameras();
         }
 
+        /// <summary>Per-domain grading: bloom strength, saturation, colour filter and vignette.</summary>
+        public static void ApplyTheme(float bloomIntensity, float saturation, Color colorFilter, float vignetteIntensity)
+        {
+            Ensure();
+            if (_volume == null || _volume.sharedProfile == null) return;
+
+            VolumeProfile profile = _volume.sharedProfile;
+            if (profile.TryGet(out Bloom bloom)) bloom.intensity.value = bloomIntensity;
+            if (profile.TryGet(out ColorAdjustments adjustments))
+            {
+                adjustments.saturation.overrideState = true;
+                adjustments.saturation.value = saturation;
+                adjustments.colorFilter.overrideState = true;
+                adjustments.colorFilter.value = colorFilter;
+            }
+            if (profile.TryGet(out Vignette vignette)) vignette.intensity.value = vignetteIntensity;
+        }
+
         private static VolumeProfile BuildProfile()
         {
             VolumeProfile profile = ScriptableObject.CreateInstance<VolumeProfile>();

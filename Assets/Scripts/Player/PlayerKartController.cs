@@ -54,6 +54,9 @@ namespace NitroRhythm.Player
         /// <summary>Temporary speed modifier (debuffs &lt; 1, boosts &gt; 1). Applied to target speed.</summary>
         public float SpeedMultiplier { get; set; } = 1f;
 
+        /// <summary>True while the kart is K.O. waiting to revive: no steering, throttle or jumping.</summary>
+        public bool ControlLocked { get; set; }
+
         /// <summary>True when the kart is resting on a solid surface (track/platform).</summary>
         public bool IsGrounded => _isGrounded;
 
@@ -121,6 +124,11 @@ namespace NitroRhythm.Player
         /// <summary>The kart's current forward speed in units/sec.</summary>
         public float CurrentSpeed { get; private set; }
 
+        /// <summary>True while a speed pad / rhythm boost is active (HUD + engine sound).</summary>
+        public bool IsBoosting => _boostTimer > 0f;
+        public float BoostTimeLeft => _boostTimer;
+        public float BoostMultiplier => _boostMultiplier;
+
         private void Awake()
         {
             // Standard vehicle proportions for the speedrun karts.
@@ -156,6 +164,7 @@ namespace NitroRhythm.Player
                 if (_boostTimer < 0f)
                 {
                     _boostTimer = 0f;
+                    _boostMultiplier = 1f;
                 }
             }
         }
@@ -164,6 +173,13 @@ namespace NitroRhythm.Player
         {
             UpdateGrounded();
             ApplyGravity();
+            if (ControlLocked)
+            {
+                _input?.ConsumeJump();   // discard presses made while down
+                _rb.linearDamping = 6f;   // coast to a stop
+                CurrentSpeed = 0f;
+                return;
+            }
             ApplySteering();
             ApplyDrive();
             ApplyJump();
@@ -214,7 +230,10 @@ namespace NitroRhythm.Player
             }
 
             // Drag: strong on the ground, light in the air for jumps.
-            _rb.linearDamping = _isGrounded ? _groundDrag : _airDrag;
+            // While accelerating the drive already sets the target speed; ground drag on top of it capped the
+            // kart at ~15 u/s instead of its 30-44 u/s. Drag only brakes the kart once the throttle is released.
+            bool accelerating = Mathf.Abs(throttle) > 0.01f;
+            _rb.linearDamping = _isGrounded ? (accelerating ? 0f : _groundDrag) : _airDrag;
 
             CurrentSpeed = Vector3.Dot(_rb.linearVelocity, transform.forward);
         }
@@ -227,6 +246,7 @@ namespace NitroRhythm.Player
             {
                 // Direct velocity set for a snappy, predictable arcade jump.
                 _rb.linearVelocity = new Vector3(_rb.linearVelocity.x, _jumpForce, _rb.linearVelocity.z);
+                NitroRhythm.Audio.SfxPlayer.Play(NitroRhythm.Audio.SfxLibrary.Jump, 0.5f, Random.Range(0.95f, 1.08f));
             }
         }
 
@@ -236,8 +256,10 @@ namespace NitroRhythm.Player
         /// </summary>
         public void ApplySpeedBoost(float multiplier, float duration)
         {
+            bool wasIdle = _boostTimer <= 0f;
             _boostMultiplier = Mathf.Max(multiplier, _boostMultiplier);
             _boostTimer = Mathf.Max(duration, _boostTimer);
+            if (wasIdle) NitroRhythm.Audio.SfxPlayer.Play(NitroRhythm.Audio.SfxLibrary.Boost, 0.55f);
         }
 
         /// <summary>

@@ -99,8 +99,12 @@ namespace NitroRhythm.Audio
 
             if (_clip == null)
             {
-                _clip = MusicGenerator.CreateDemoLoop(_demoBpm, _demoBars);
-                Debug.Log("[AudioReactive] Using built-in generated demo loop.");
+                // Every domain has its own synthesized track (tempo, key, groove, texture).
+                NitroRhythm.Data.LevelDefinition[] playable = NitroRhythm.Data.PrototypeData.Instance.PlayableLevels;
+                int index = Mathf.Clamp(session.CurrentLevelIndex - 1, 0, Mathf.Max(0, playable.Length - 1));
+                string domainId = playable.Length > 0 ? playable[index].id : "default";
+                _clip = DomainMusic.Create(domainId);
+                Debug.Log($"[AudioReactive] Using the synthesized track of domain '{domainId}'.");
             }
 
             // Pre-analysis (fast, offline) for deterministic track construction.

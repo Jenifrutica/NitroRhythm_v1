@@ -33,6 +33,14 @@ namespace NitroRhythm.Audio
 
             plan.trackHalfWidth = width * 0.5f;
 
+            // Smooth difficulty curve (hallazgo P9): the first playable domains are
+            // forgiving (smaller gaps, fewer hazards, longer safe runway) and ramp up
+            // to the full challenge by the last domain.
+            float ramp = level != null ? Mathf.Clamp01((level.difficulty - 1) / 6f) : 1f;
+            float gapScale = Mathf.Lerp(0.6f, 1f, ramp);
+            float trebleGate = Mathf.Lerp(0.5f, 0.35f, ramp);
+            int warmupSegments = Mathf.RoundToInt(Mathf.Lerp(3f, 1f, ramp));
+
             int maxSegments = 48;
             int beats = Mathf.Min(analysis.beatCount, maxSegments * 2);
             int segmentIndex = 0;
@@ -54,17 +62,17 @@ namespace NitroRhythm.Audio
                 // Low band => gaps and vertical impulses.
                 if (kick)
                 {
-                    segment.gap = Mathf.Lerp(4f, 12f, bass);
+                    segment.gap = Mathf.Max(2.5f, Mathf.Lerp(4f, 12f, bass) * gapScale);
                     segment.hasJumpPad = bass > 0.75f;
                     segment.hasRamp = bass > 0.9f;
                 }
                 else
                 {
-                    segment.gap = Mathf.Lerp(3f, 6f, bass);
+                    segment.gap = Mathf.Max(2.5f, Mathf.Lerp(3f, 6f, bass) * gapScale);
                 }
 
                 // High band => hazards and speed pads.
-                if (treble > 0.35f)
+                if (treble > trebleGate)
                 {
                     segment.obstacleKind = treble > 0.7f ? ObstacleKind.StaticBarrier
                         : (treble > 0.5f ? ObstacleKind.MovingHazard : ObstacleKind.SpinningBar);
@@ -85,6 +93,15 @@ namespace NitroRhythm.Audio
                     {
                         segment.obstacleKind = ObstacleKind.MovingHazard;
                     }
+                }
+
+                // Safe runway at the start of every domain: no hazards, short gaps.
+                if (segmentIndex < warmupSegments)
+                {
+                    segment.gap = Mathf.Min(segment.gap, 3f);
+                    segment.obstacleKind = ObstacleKind.None;
+                    segment.obstacleCount = 0;
+                    segment.hasRamp = false;
                 }
 
                 plan.segments.Add(segment);

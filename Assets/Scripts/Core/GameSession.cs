@@ -32,8 +32,53 @@ namespace NitroRhythm.Core
         [Header("Progress")]
         public int StartLevelIndex = 1;
 
-        /// <summary>Score captured when the run ends, shown in the results scene.</summary>
+        /// <summary>Playable domain being played (1-based). Each domain is its own gameplay screen.</summary>
+        public int CurrentLevelIndex = 1;
+
+        /// <summary>Running totals across levels (the HUD continues from these, results show them).</summary>
+        /// <summary>The first-level "how to play" screen is shown once per run.</summary>
+        public bool ControlsGuideShown;
+
         public int LastScore;
+        public float LastTime;
+
+        /// <summary>Totals at the start of the current level, so "restart" can rewind to them.</summary>
+        public int LevelStartScore;
+        public float LevelStartTime;
+
+        /// <summary>Starts a fresh run at the first domain with zeroed totals.</summary>
+        public void BeginRun()
+        {
+            ControlsGuideShown = false;
+            CurrentLevelIndex = Mathf.Max(1, StartLevelIndex);
+            LastScore = 0;
+            LastTime = 0f;
+            LevelStartScore = 0;
+            LevelStartTime = 0f;
+        }
+
+        /// <summary>Called when a level screen starts so a restart can rewind to this point.</summary>
+        public void MarkLevelStart()
+        {
+            LevelStartScore = LastScore;
+            LevelStartTime = LastTime;
+        }
+
+        /// <summary>Rewinds the totals to the start of the current level (restart).</summary>
+        public void RestartLevel()
+        {
+            LastScore = LevelStartScore;
+            LastTime = LevelStartTime;
+        }
+
+        /// <summary>Moves to the next domain; false when the last domain was completed.</summary>
+        public bool AdvanceLevel()
+        {
+            int total = Mathf.Max(1, PrototypeData.Instance.PlayableCount);
+            if (CurrentLevelIndex >= total) return false;
+            CurrentLevelIndex++;
+            return true;
+        }
 
         /// <summary>Pre-analysed music (null when using the built-in generated track).</summary>
         public AudioAnalysisResult Analysis;
@@ -71,6 +116,15 @@ namespace NitroRhythm.Core
             string id = P1CharacterId;
             if (playerSlot == 2) id = P2CharacterId;
             else if (playerSlot == 3) id = P3CharacterId;
+
+            // Player 2 must never be the same pilot as player 1.
+            if (playerSlot == 2 && id == P1CharacterId)
+            {
+                foreach (CharacterDefinition other in PrototypeData.Instance.characters)
+                {
+                    if (!other.IsVillain && other.id != P1CharacterId) { id = other.id; break; }
+                }
+            }
 
             CharacterDefinition def = PrototypeData.Instance.GetCharacter(id);
             if (def == null && PrototypeData.Instance.characters.Length > 0)

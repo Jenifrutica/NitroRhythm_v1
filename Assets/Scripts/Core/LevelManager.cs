@@ -54,8 +54,12 @@ namespace NitroRhythm.Core
         public int CurrentLevelIndex => _currentLevel - 1;
         public int TotalLevels => _totalLevels;
         public float StartX => _startX;
+        public float TrackHalfWidth => _trackHalfWidth;
         public float PlayerSpawnX => _currentCheckpoint.x;
         public Vector3 CurrentCheckpoint => _currentCheckpoint;
+
+        /// <summary>World X of every intermediate checkpoint (the HUD draws them on the progress bar).</summary>
+        public List<float> CheckpointXs { get; } = new List<float>();
 
         /// <summary>All active player karts registered by the bootstrapper for this run.</summary>
         public List<PlayerKartController> Players { get; } = new List<PlayerKartController>();
@@ -74,6 +78,9 @@ namespace NitroRhythm.Core
         }
 
         public static LevelManager Instance { get; private set; }
+
+        /// <summary>Raised when an intermediate checkpoint becomes the new respawn point.</summary>
+        public event System.Action<Vector3> CheckpointReached;
 
         private void Awake()
         {
@@ -194,6 +201,51 @@ namespace NitroRhythm.Core
             Debug.Log($"[LevelManager] Built {_totalLevels} audio-reactive domains.");
         }
 
+        /// <summary>True when this scene holds ONE domain (each level is its own screen).</summary>
+        public bool SingleLevelMode { get; private set; }
+
+        /// <summary>
+        /// Builds only the given domain from the analysed music, starting at <paramref name="startX"/>.
+        /// <see cref="TotalLevels"/> stays the number of playable domains so "last level" checks work.
+        /// </summary>
+        public void GenerateSingleLevel(NitroRhythm.Audio.AudioAnalysisResult analysis, int levelNumber, int totalLevels, float startX)
+        {
+            if (_trackBuilt) return;
+
+            if (_levelParent == null)
+            {
+                _levelParent = new GameObject("ProceduralTrack").transform;
+            }
+
+            _startX = startX;
+            _totalLevels = Mathf.Max(1, totalLevels);
+            levelNumber = Mathf.Clamp(levelNumber, MinLevel, _totalLevels);
+            SingleLevelMode = true;
+
+            NitroRhythm.Data.LevelDefinition[] playable = NitroRhythm.Data.PrototypeData.Instance.PlayableLevels;
+
+            _levelStarts.Clear();
+            _levelLengths.Clear();
+            _levelDefs.Clear();
+            for (int i = 0; i < _totalLevels; i++)
+            {
+                _levelStarts.Add(startX);
+                _levelLengths.Add(_levelLength);
+                _levelDefs.Add(playable != null && i < playable.Length ? playable[i] : null);
+            }
+
+            NitroRhythm.Data.LevelDefinition def = _levelDefs[levelNumber - MinLevel];
+            NitroRhythm.Audio.ProceduralTrackPlan plan = NitroRhythm.Audio.ProceduralTrackBuilder.Build(analysis, def, startX);
+            _levelLengths[levelNumber - MinLevel] = plan.levelLength;
+
+            GenerateLevelFromPlan(plan, levelNumber, def);
+
+            _currentLevel = levelNumber;
+            SetCheckpoint(GetLevelStartPosition(_currentLevel));
+            _trackBuilt = true;
+            Debug.Log($"[LevelManager] Built single domain {levelNumber}/{_totalLevels} ({(def != null ? def.displayName : "?")}), length {plan.levelLength:F0}.");
+        }
+
         /// <summary>Populates the procedural fallback track metadata (uniform lengths).</summary>
         private void PopulateLinearMetadata()
         {
@@ -214,6 +266,7 @@ namespace NitroRhythm.Core
         private void GenerateLevelFromPlan(NitroRhythm.Audio.ProceduralTrackPlan plan, int level, NitroRhythm.Data.LevelDefinition def)
         {
             int platformIndex = 0;
+            System.Collections.Generic.HashSet<int> checkpointSegments = ChooseCheckpointSegments(plan, level);
 
             foreach (NitroRhythm.Audio.TrackSegment segment in plan.segments)
             {
@@ -246,8 +299,18 @@ namespace NitroRhythm.Core
                     SpawnRamp(segment.startX + segment.length * 0.85f, level);
                 }
 
-                // Intermediate checkpoints every third platform.
-                if (platformIndex > 0 && platformIndex % 3 == 0)
+                // Collectible turbo prizes on clear stretches (one every few platforms).
+                NitroRhythm.World.DomainTheme prizeTheme = NitroRhythm.World.DomainTheme.Current;
+                if (prizeTheme != null && platformIndex >= 2 && platformIndex % 4 == 1
+                    && segment.obstacleCount == 0 && !segment.hasJumpPad && !segment.hasSpeedPad && !segment.hasRamp)
+                {
+                    GameObject prize = NitroRhythm.World.HazardVisuals.Prize(prizeTheme,
+                        new Vector3(segment.startX + segment.length * 0.55f, _platformHeight + 1.7f, Random.Range(-2.2f, 2.2f)), _levelParent);
+                    _spawnedObjects.Add(prize);
+                }
+
+                // Few, well-spread checkpoints (see ChooseCheckpointSegments).
+                if (checkpointSegments.Contains(platformIndex))
                 {
                     SpawnCheckpoint(segment.startX + segment.length * 0.5f, level);
                 }
@@ -260,6 +323,46 @@ namespace NitroRhythm.Core
                 : plan.levelLength;
 
             SpawnLevelGoal(levelEnd, level);
+        }
+
+        /// <summary>How many intermediate checkpoints a domain gets (the goal acts as the last one).</summary>
+        public static int CheckpointCountForLevel(int level)
+        {
+            if (level <= 2) return 1;
+            if (level >= 7) return 3;
+            return 2;
+        }
+
+        /// <summary>
+        /// Picks segments for the checkpoints evenly along the level (at k/(n+1) of its length),
+        /// avoiding segments that hold hazards, pads or ramps so a gate never sits on a trap.
+        /// </summary>
+        public static System.Collections.Generic.HashSet<int> ChooseCheckpointSegments(NitroRhythm.Audio.ProceduralTrackPlan plan, int level)
+        {
+            System.Collections.Generic.HashSet<int> chosen = new System.Collections.Generic.HashSet<int>();
+            int count = plan.segments.Count;
+            int wanted = CheckpointCountForLevel(level);
+            if (count < 4) return chosen;
+
+            for (int k = 1; k <= wanted; k++)
+            {
+                int ideal = Mathf.Clamp(Mathf.RoundToInt(count * k / (float)(wanted + 1)), 1, count - 2);
+                int pick = -1;
+                for (int offset = 0; offset <= 4 && pick < 0; offset++)
+                {
+                    foreach (int candidate in new[] { ideal + offset, ideal - offset })
+                    {
+                        if (candidate < 1 || candidate > count - 2 || chosen.Contains(candidate)) continue;
+                        NitroRhythm.Audio.TrackSegment seg = plan.segments[candidate];
+                        bool clear = seg.obstacleCount == 0 && !seg.hasJumpPad && !seg.hasSpeedPad && !seg.hasRamp;
+                        if (clear) { pick = candidate; break; }
+                    }
+                }
+                if (pick < 0) pick = ideal;
+                chosen.Add(pick);
+            }
+
+            return chosen;
         }
 
         private void SpawnObstacleByKind(int level, float x, float platformWidth, NitroRhythm.Audio.ObstacleKind kind)
@@ -328,16 +431,29 @@ namespace NitroRhythm.Core
         /// Activates an intermediate checkpoint. Only advances forward so a
         /// player cannot "unlock" a checkpoint behind the current one.
         /// </summary>
-        public void ActivateCheckpoint(Vector3 position)
+        public bool ActivateCheckpoint(Vector3 position)
         {
-            if (position.x <= _currentCheckpoint.x) return;
+            if (position.x <= _currentCheckpoint.x) return false;
 
             position.y = _platformHeight;
             _currentCheckpoint = position;
+            CheckpointReached?.Invoke(position);
             Debug.Log($"[LevelManager] Checkpoint activated at {position}");
+            return true;
         }
 
         /// <summary>Teleports all active players to the current checkpoint, keeping forward speed.</summary>
+        /// <summary>Checkpoint position for a player, shifted sideways into its own lane so karts never overlap.</summary>
+        public Vector3 GetCheckpointSpawn(PlayerKartController player)
+        {
+            Vector3 spawn = _currentCheckpoint;
+            spawn.y = 1.2f;
+            int count = Players.Count;
+            int index = player != null ? Players.IndexOf(player) : 0;
+            if (count > 1 && index >= 0) spawn.z += (index - (count - 1) * 0.5f) * 3.2f;
+            return spawn;
+        }
+
         public void RepositionPlayersToCheckpoint()
         {
             foreach (PlayerKartController player in Players)
@@ -346,11 +462,10 @@ namespace NitroRhythm.Core
                 Vector3 keptVelocity = rb != null ? rb.linearVelocity : Vector3.zero;
                 keptVelocity.y = 0f;
 
-                Vector3 spawn = _currentCheckpoint;
-                spawn.y = 1.2f;
+                Vector3 spawn = GetCheckpointSpawn(player);
 
-                player.transform.position = spawn;
-                player.transform.rotation = Quaternion.Euler(0f, 90f, 0f);
+                player.transform.SetPositionAndRotation(spawn, Quaternion.Euler(0f, 90f, 0f));
+                if (rb != null) { rb.position = spawn; rb.rotation = Quaternion.Euler(0f, 90f, 0f); }
 
                 if (rb != null)
                 {
@@ -456,6 +571,7 @@ namespace NitroRhythm.Core
 
         private void SpawnCheckpoint(float x, int level)
         {
+            CheckpointXs.Add(x);
             GameObject checkpoint = new GameObject($"Level{level}_Checkpoint");
             checkpoint.transform.SetParent(_levelParent, true);
             checkpoint.transform.position = new Vector3(x, _platformHeight + 1.2f, 0f);
@@ -464,7 +580,8 @@ namespace NitroRhythm.Core
             trigger.size = new Vector3(2.5f, 3f, _trackHalfWidth * 2f);
             trigger.isTrigger = true;
 
-            checkpoint.AddComponent<CheckpointComponent>();
+            CheckpointComponent component = checkpoint.AddComponent<CheckpointComponent>();
+            component.BuildGate(_trackHalfWidth);
             _spawnedObjects.Add(checkpoint);
         }
 
@@ -514,23 +631,55 @@ namespace NitroRhythm.Core
             Vector3 scale = new Vector3(width, PlatformThickness, _trackHalfWidth * 2f);
             GameObject platform = SpawnObstacleBox(null, $"Level{level}_Platform", center, scale, baseColor ?? new Color(0.42f, 0.42f, 0.5f));
 
-            if (baseColor.HasValue && accentColor.HasValue)
+            NitroRhythm.World.DomainTheme theme = NitroRhythm.World.DomainTheme.Current;
+            Renderer renderer = platform.GetComponent<Renderer>();
+            if (theme != null && renderer != null)
             {
-                Renderer renderer = platform.GetComponent<Renderer>();
-                if (renderer != null)
-                {
-                    renderer.sharedMaterial = VisualEntityFactory.CreateNeonMaterial(baseColor.Value, accentColor.Value, 0.4f);
-                }
+                renderer.sharedMaterial = NitroRhythm.World.DomainMaterials.Platform(theme, width, _trackHalfWidth * 2f);
+                SpawnEdgeStrips(startX, width, theme);
+            }
+            else if (baseColor.HasValue && accentColor.HasValue && renderer != null)
+            {
+                renderer.sharedMaterial = VisualEntityFactory.CreateNeonMaterial(baseColor.Value, accentColor.Value, 0.4f);
+            }
+        }
+
+        /// <summary>Glowing strips along both long edges so the track reads clearly against the void.</summary>
+        private void SpawnEdgeStrips(float startX, float width, NitroRhythm.World.DomainTheme theme)
+        {
+            Material glow = NitroRhythm.World.DomainMaterials.Glow(theme.accent * 0.3f, theme.accent, 2.4f);
+            for (int side = -1; side <= 1; side += 2)
+            {
+                GameObject strip = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                strip.name = "EdgeStrip";
+                Collider c = strip.GetComponent<Collider>();
+                if (c != null) Destroy(c);
+                strip.transform.SetParent(_levelParent, true);
+                strip.transform.position = new Vector3(startX + width * 0.5f, _platformHeight + 0.04f, side * (_trackHalfWidth - 0.18f));
+                strip.transform.localScale = new Vector3(width, 0.08f, 0.22f);
+                strip.GetComponent<Renderer>().sharedMaterial = glow;
+                strip.GetComponent<Renderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                _spawnedObjects.Add(strip);
             }
         }
 
         private void SpawnSpinningBar(float x, int level)
         {
-            GameObject bar = SpawnObstacleBox(
-                _spinningBarPrefab, "SpinningBar",
-                new Vector3(x, _platformHeight + 0.9f, 0f),
-                new Vector3(1f, 0.3f, 4f),
-                new Color(0.95f, 0.55f, 0.1f));
+            NitroRhythm.World.DomainTheme theme = NitroRhythm.World.DomainTheme.Current;
+            GameObject bar;
+            if (theme != null)
+            {
+                bar = NitroRhythm.World.HazardVisuals.SpinningBar(theme, new Vector3(x, _platformHeight + 0.9f, 0f), _levelParent);
+                _spawnedObjects.Add(bar);
+            }
+            else
+            {
+                bar = SpawnObstacleBox(
+                    _spinningBarPrefab, "SpinningBar",
+                    new Vector3(x, _platformHeight + 0.9f, 0f),
+                    new Vector3(1f, 0.3f, 4f),
+                    new Color(0.95f, 0.55f, 0.1f));
+            }
 
             SpinningBarComponent spinner = bar.GetComponent<SpinningBarComponent>();
             if (spinner == null)
@@ -542,11 +691,25 @@ namespace NitroRhythm.Core
 
         private void SpawnMovingHazard(float x, float platformWidth, int level)
         {
-            GameObject hazard = SpawnObstacleBox(
-                _movingHazardPrefab, "MovingHazard",
-                new Vector3(x, _platformHeight + 0.8f, 0f),
-                new Vector3(1.2f, 0.5f, _trackHalfWidth * 1.6f),
-                new Color(1f, 0.85f, 0.1f));
+            // Some hazards sweep across the track (Z) to push players off the edge.
+            bool sweep = Random.value < 0.5f || level >= 4;
+            float length = sweep ? 2.6f : _trackHalfWidth * 1.6f;
+
+            NitroRhythm.World.DomainTheme theme = NitroRhythm.World.DomainTheme.Current;
+            GameObject hazard;
+            if (theme != null)
+            {
+                hazard = NitroRhythm.World.HazardVisuals.MovingHazard(theme, new Vector3(x, _platformHeight + 0.8f, 0f), length, _levelParent);
+                _spawnedObjects.Add(hazard);
+            }
+            else
+            {
+                hazard = SpawnObstacleBox(
+                    _movingHazardPrefab, "MovingHazard",
+                    new Vector3(x, _platformHeight + 0.8f, 0f),
+                    new Vector3(1.2f, 0.5f, length),
+                    new Color(1f, 0.85f, 0.1f));
+            }
 
             MovingHazardComponent mover = hazard.GetComponent<MovingHazardComponent>();
             if (mover == null)
@@ -555,34 +718,42 @@ namespace NitroRhythm.Core
             }
             mover.MoveSpeed = Random.Range(2f, 3.5f) + level * 0.2f;
             mover.MoveRange = Mathf.Clamp(platformWidth * 0.28f, 1f, 2.8f);
-
-            // Some hazards sweep across the track (Z) to push players off the edge.
-            mover.SweepAcrossTrack = Random.value < 0.5f || level >= 4;
-            if (mover.SweepAcrossTrack)
-            {
-                hazard.transform.localScale = new Vector3(1.2f, 0.5f, 2.6f);
-            }
+            mover.SweepAcrossTrack = sweep;
         }
 
         private void SpawnStaticBarrier(float x, int level)
         {
             float height = 1.2f + level * 0.1f;
-            SpawnObstacleBox(
-                _staticBarrierPrefab, "StaticBarrier",
-                new Vector3(x, _platformHeight + height * 0.5f, _trackHalfWidth * 0.35f),
-                new Vector3(0.8f, height, 2.5f),
-                new Color(0.35f, 0.35f, 0.42f));
+            Vector3 position = new Vector3(x, _platformHeight + height * 0.5f, _trackHalfWidth * 0.35f);
+
+            NitroRhythm.World.DomainTheme theme = NitroRhythm.World.DomainTheme.Current;
+            if (theme != null)
+            {
+                _spawnedObjects.Add(NitroRhythm.World.HazardVisuals.StaticBarrier(theme, position, height, _levelParent));
+                return;
+            }
+
+            SpawnObstacleBox(_staticBarrierPrefab, "StaticBarrier", position, new Vector3(0.8f, height, 2.5f), new Color(0.35f, 0.35f, 0.42f));
         }
 
         private void SpawnJumpPad(float x, int level)
         {
-            GameObject pad = SpawnObstacleBox(
-                _jumpPadPrefab, "JumpPad",
-                new Vector3(x, _platformHeight + 0.1f, 0f),
-                new Vector3(2f, 0.2f, 2f),
-                new Color(0.2f, 0.9f, 0.6f));
-
-            SetTrigger(pad);
+            NitroRhythm.World.DomainTheme theme = NitroRhythm.World.DomainTheme.Current;
+            GameObject pad;
+            if (theme != null)
+            {
+                pad = NitroRhythm.World.HazardVisuals.JumpPad(theme, new Vector3(x, _platformHeight + 0.1f, 0f), _levelParent);
+                _spawnedObjects.Add(pad);
+            }
+            else
+            {
+                pad = SpawnObstacleBox(
+                    _jumpPadPrefab, "JumpPad",
+                    new Vector3(x, _platformHeight + 0.1f, 0f),
+                    new Vector3(2f, 0.2f, 2f),
+                    new Color(0.2f, 0.9f, 0.6f));
+                SetTrigger(pad);
+            }
 
             BouncingPadComponent bumper = pad.GetComponent<BouncingPadComponent>();
             if (bumper == null)
@@ -595,13 +766,22 @@ namespace NitroRhythm.Core
 
         private void SpawnSpeedPad(float x, int level)
         {
-            GameObject pad = SpawnObstacleBox(
-                _speedPadPrefab, "SpeedPad",
-                new Vector3(x, _platformHeight + 0.1f, 0f),
-                new Vector3(2.4f, 0.15f, 2.4f),
-                new Color(0.3f, 0.95f, 1f));
-
-            SetTrigger(pad);
+            NitroRhythm.World.DomainTheme theme = NitroRhythm.World.DomainTheme.Current;
+            GameObject pad;
+            if (theme != null)
+            {
+                pad = NitroRhythm.World.HazardVisuals.SpeedPad(theme, new Vector3(x, _platformHeight + 0.1f, 0f), _levelParent);
+                _spawnedObjects.Add(pad);
+            }
+            else
+            {
+                pad = SpawnObstacleBox(
+                    _speedPadPrefab, "SpeedPad",
+                    new Vector3(x, _platformHeight + 0.1f, 0f),
+                    new Vector3(2.4f, 0.15f, 2.4f),
+                    new Color(0.3f, 0.95f, 1f));
+                SetTrigger(pad);
+            }
 
             SpeedPadComponent speedPad = pad.GetComponent<SpeedPadComponent>();
             if (speedPad == null)
@@ -623,18 +803,29 @@ namespace NitroRhythm.Core
                 new Color(0.45f, 0.5f, 0.62f));
 
             ramp.transform.rotation = Quaternion.Euler(0f, 0f, -14f);
+
+            NitroRhythm.World.DomainTheme theme = NitroRhythm.World.DomainTheme.Current;
+            if (theme != null)
+            {
+                ramp.GetComponent<Renderer>().sharedMaterial = NitroRhythm.World.DomainMaterials.Platform(theme, 8f, _trackHalfWidth * 1.8f);
+            }
         }
 
         private void SpawnLevelGoal(float levelEndX, int level)
         {
             float goalCenterX = levelEndX;
+            NitroRhythm.World.DomainTheme theme = NitroRhythm.World.DomainTheme.Current;
 
             // Solid landing platform that bridges into the next level.
-            SpawnObstacleBox(
+            GameObject goalPlatform = SpawnObstacleBox(
                 null, $"Level{level}_GoalPlatform",
                 new Vector3(goalCenterX, _platformHeight - PlatformThickness * 0.5f, 0f),
                 new Vector3(GoalLength, PlatformThickness, _trackHalfWidth * 2f),
                 new Color(0.25f, 0.9f, 0.35f));
+            if (theme != null)
+            {
+                goalPlatform.GetComponent<Renderer>().sharedMaterial = NitroRhythm.World.DomainMaterials.Glow(theme.platformColor, theme.accent, 1.2f);
+            }
 
             // Trigger volume floating above the goal platform.
             GameObject triggerObj = new GameObject($"Level{level}_GoalTrigger");
@@ -649,6 +840,16 @@ namespace NitroRhythm.Core
             LevelGoalTrigger goalTrigger = triggerObj.AddComponent<LevelGoalTrigger>();
             goalTrigger.LevelNumber = level;
             _spawnedObjects.Add(triggerObj);
+
+            if (theme != null)
+            {
+                // Standing portal: three counter-rotating rings.
+                GameObject portal = NitroRhythm.World.HazardVisuals.Portal(theme,
+                    new Vector3(goalCenterX + 1f, _platformHeight + Mathf.Min(_trackHalfWidth, 6f) * 0.9f, 0f),
+                    Mathf.Min(_trackHalfWidth, 6f) * 0.9f, _levelParent);
+                _spawnedObjects.Add(portal);
+                return;
+            }
 
             // Glowing checkpoint zone: emissive disc + point light hovering above the goal.
             GameObject glowDisc = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
@@ -670,6 +871,7 @@ namespace NitroRhythm.Core
             }
 
             Light glowLight = glowDisc.AddComponent<Light>();
+            glowLight.shadows = LightShadows.None;
             glowLight.type = LightType.Point;
             glowLight.color = new Color(0.4f, 1f, 0.6f);
             glowLight.intensity = 2.5f;

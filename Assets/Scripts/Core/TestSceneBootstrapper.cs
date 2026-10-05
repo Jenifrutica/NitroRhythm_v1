@@ -25,8 +25,8 @@ namespace NitroRhythm.Core
         [SerializeField] private bool _useAudioReactive = true;
 
         [Header("Camera Setup")]
-        [SerializeField] private Vector3 _cameraOffset = new Vector3(0f, 4.6f, -10.5f);
-        [SerializeField] private float _cameraSmoothing = 6f;
+        [SerializeField] private Vector3 _cameraOffset = new Vector3(0f, 4.0f, -8.5f);
+        [SerializeField] private float _cameraSmoothing = 12f;
 
         [Header("Debug")]
         [SerializeField] private bool _spawnOnStart = true;
@@ -60,6 +60,8 @@ namespace NitroRhythm.Core
             if (!_spawnOnStart) return;
 
             GameSession session = GameSession.EnsureExists();
+            session.MarkLevelStart();
+            LevelGoalTrigger.ResetMessage();
             StartGame(session.Mode);
         }
 
@@ -101,9 +103,43 @@ namespace NitroRhythm.Core
         {
             if (_trackGenerated) return;
 
-            int playable = PrototypeData.Instance.PlayableCount;
-            LevelManager.GenerateFromAudio(analysis, Mathf.Max(1, playable), _trackStartX);
+            int playable = Mathf.Max(1, PrototypeData.Instance.PlayableCount);
+            GameSession session = GameSession.EnsureExists();
+            PrepareTheme(session);   // the track visuals are built from the active domain theme
+            LevelManager.GenerateSingleLevel(analysis, session.CurrentLevelIndex, playable, _trackStartX);
             _trackGenerated = true;
+
+            DressDomain(session);
+
+            // The track did not exist when the entities spawned: put everyone on it now.
+            LevelManager.RepositionPlayersToCheckpoint();
+            if (Villain != null)
+            {
+                VillainBoss boss = Villain.GetComponent<VillainBoss>();
+                if (boss != null) boss.RepositionToLevel(LevelManager, 60f);
+            }
+        }
+
+        private static string CurrentDomainId(GameSession session)
+        {
+            LevelDefinition[] playable = PrototypeData.Instance.PlayableLevels;
+            int index = Mathf.Clamp(session.CurrentLevelIndex - 1, 0, Mathf.Max(0, playable.Length - 1));
+            return playable.Length > 0 ? playable[index].id : "default";
+        }
+
+        private static void PrepareTheme(GameSession session)
+        {
+            NitroRhythm.World.DomainTheme.SetCurrent(NitroRhythm.World.DomainTheme.Get(CurrentDomainId(session)));
+        }
+
+        private void DressDomain(GameSession session)
+        {
+            LevelDefinition[] playable = PrototypeData.Instance.PlayableLevels;
+            int index = Mathf.Clamp(session.CurrentLevelIndex - 1, 0, Mathf.Max(0, playable.Length - 1));
+            string domainId = playable.Length > 0 ? playable[index].id : "default";
+
+            // Set the theme BEFORE nothing else builds visuals that depend on it.
+            NitroRhythm.World.DomainDecorator.Build(LevelManager, session.CurrentLevelIndex, domainId, Player1 != null ? Player1.transform : null);
         }
 
         private void GenerateFallbackTrack()
@@ -132,12 +168,14 @@ namespace NitroRhythm.Core
             Player1 = CreatePlayerKart("Player1", p1Def, baseSpawn + new Vector3(0f, 0f, -1.6f), facingTrack, kartScale,
                 PlayerKartController.InputScheme.PlayerOne);
             Player1.AddComponent<KartHealthSpeed>().SetFlashRect(_p1Rect);
+            Player1.AddComponent<EngineSound>();
 
             if (mode != GameMode.SinglePlayer)
             {
                 CharacterDefinition p2Def = session.GetCharacter(2);
                 bool isBot = mode == GameMode.SinglePlayerAndBot;
-                Player2 = CreatePlayerKart("Player2", isBot ? null : p2Def,
+                // The bot also gets a real character (and model) instead of a placeholder cube.
+                Player2 = CreatePlayerKart("Player2", p2Def,
                     baseSpawn + new Vector3(0f, 0f, 1.6f), facingTrack, kartScale,
                     isBot ? PlayerKartController.InputScheme.Bot : PlayerKartController.InputScheme.PlayerTwo);
 
@@ -168,7 +206,8 @@ namespace NitroRhythm.Core
         private GameObject CreatePlayerKart(string name, CharacterDefinition def, Vector3 position, Quaternion rotation, Vector3 scale, PlayerKartController.InputScheme scheme)
         {
             Color color = def != null ? def.Color : VisualEntityFactory.Player1Color;
-            GameObject kart = VisualEntityFactory.CreateKartEntity(name, color, null, def != null ? def.kartModel : null, def != null ? def.texture : null);
+            GameObject kart = VisualEntityFactory.CreateKartEntity(name, color, null, def != null ? def.kartModel : null, def != null ? def.texture : null,
+                def != null ? def.pilotModel : null, def != null ? def.pilotOffset : (Vector3?)null, def != null ? def.pilotScale : 1f);
             kart.transform.localScale = scale;
             kart.transform.rotation = rotation;
             kart.transform.position = position;
@@ -184,7 +223,8 @@ namespace NitroRhythm.Core
         private GameObject CreateVillainKart(CharacterDefinition def, Vector3 scale, Quaternion rotation)
         {
             Color color = def != null ? def.Color : VisualEntityFactory.VillainColor;
-            GameObject villain = VisualEntityFactory.CreateKartEntity(VisualEntityFactory.VillainName, color, null, def != null ? def.kartModel : "Kart_Neon_03", def != null ? def.texture : "Vox");
+            GameObject villain = VisualEntityFactory.CreateKartEntity(VisualEntityFactory.VillainName, color, null, def != null ? def.kartModel : "Kart_Neon_03", def != null ? def.texture : "Vox",
+                def != null ? def.pilotModel : "Piloto_Neon_03", def != null ? def.pilotOffset : (Vector3?)null, def != null ? def.pilotScale : 1f);
             villain.transform.localScale = scale;
             villain.transform.rotation = rotation;
 
@@ -254,6 +294,9 @@ namespace NitroRhythm.Core
 
         private void ConfigureFollowCamera(Camera camera, Transform target)
         {
+            // Every follow camera renders the themed skybox (the scene camera used a solid colour).
+            camera.clearFlags = CameraClearFlags.Skybox;
+            camera.farClipPlane = 700f;
             camera.transform.position = target.position + target.rotation * _cameraOffset;
             camera.transform.LookAt(target.position + Vector3.up * 1f);
 
@@ -273,6 +316,10 @@ namespace NitroRhythm.Core
             GameObject systems = new GameObject("Systems");
 
             systems.AddComponent<EnvironmentManager>();
+
+            GameObject intro = new GameObject("LevelIntro");
+            intro.transform.SetParent(systems.transform, false);
+            intro.AddComponent<LevelIntroCard>();
 
             GameObject cutscene = new GameObject("CutsceneController");
             cutscene.transform.SetParent(systems.transform, false);

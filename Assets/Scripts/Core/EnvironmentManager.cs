@@ -59,6 +59,13 @@ namespace NitroRhythm.Core
 
         public void ApplyLevelTheme(int level)
         {
+            // When a domain theme is active (World/DomainDecorator) it owns sky, fog and lighting.
+            if (NitroRhythm.World.DomainTheme.Current != null)
+            {
+                LevelThemeApplied?.Invoke(level);
+                return;
+            }
+
             CurrentLevel = Mathf.Clamp(level, 1, LevelThemes.Length);
             int index = CurrentLevel - 1;
             Color theme = LevelThemes[index];
@@ -73,21 +80,29 @@ namespace NitroRhythm.Core
                 fogColor = def.Fog;
             }
 
-            // Skybox / background tint.
+            // Skybox / background tint. Skybox/Procedural uses _SkyTint (not _Tint), which is why the
+            // theme colour was never applied before.
             Material skybox = RenderSettings.skybox;
-            if (skybox == null || !skybox.HasProperty("_Tint"))
+            if (skybox == null || (!skybox.HasProperty("_SkyTint") && !skybox.HasProperty("_Tint")))
             {
                 Shader procedural = Shader.Find("Skybox/Procedural");
-                if (procedural != null)
-                {
-                    skybox = new Material(procedural);
-                    skybox.SetColor("_GroundColor", theme * 0.25f);
-                }
+                if (procedural != null) skybox = new Material(procedural);
             }
 
-            if (skybox != null && skybox.HasProperty("_Tint"))
+            if (skybox != null)
             {
-                skybox.SetColor("_Tint", theme);
+                if (skybox.HasProperty("_SkyTint"))
+                {
+                    skybox.SetColor("_SkyTint", theme);
+                    if (skybox.HasProperty("_GroundColor")) skybox.SetColor("_GroundColor", Color.Lerp(theme, Color.black, 0.75f));
+                    if (skybox.HasProperty("_AtmosphereThickness")) skybox.SetFloat("_AtmosphereThickness", 1.1f);
+                    if (skybox.HasProperty("_Exposure")) skybox.SetFloat("_Exposure", 1.25f);
+                }
+                else if (skybox.HasProperty("_Tint"))
+                {
+                    skybox.SetColor("_Tint", theme);
+                }
+
                 RenderSettings.skybox = skybox;
                 DynamicGI.UpdateEnvironment();
             }

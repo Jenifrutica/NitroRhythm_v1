@@ -146,6 +146,15 @@ namespace NitroRhythm.Narrative
 
             bool wasLastLevel = _pendingLevel >= (_levelManager != null ? _levelManager.TotalLevels : 1);
 
+            // Each domain is its own screen: advance the session and load the next one (or results).
+            if (_levelManager != null && _levelManager.SingleLevelMode)
+            {
+                GameSession session = GameSession.EnsureExists();
+                if (session.AdvanceLevel()) SceneFlow.LoadGameplay();
+                else SceneFlow.LoadResults();
+                return;
+            }
+
             if (_levelManager != null)
             {
                 _levelManager.CompleteLevel(_pendingLevel);
@@ -187,6 +196,8 @@ namespace NitroRhythm.Narrative
             if (renderer != null) renderer.sharedMaterial = VisualEntityFactory.CreateEmissiveMaterial(_portalColor);
 
             Light portalLight = _portal.AddComponent<Light>();
+
+            portalLight.shadows = LightShadows.None;
             portalLight.type = LightType.Point;
             portalLight.color = _portalColor;
             portalLight.intensity = 3f;

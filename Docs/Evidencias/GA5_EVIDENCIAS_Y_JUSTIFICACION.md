@@ -101,10 +101,10 @@ y `.pdf`.
 ### Justificación de cumplimiento
 | Requerimiento | Cómo lo cumple el proyecto | Artefacto |
 | :-- | :-- | :-- |
-| Capturas "antes" | Herramienta de captura incluida; carpeta preparada. | `Docs/Capturas/Antes/`, `Assets/Editor/EvidenceCaptureTool.cs` |
+| Capturas "antes" | Capturas del estado previo (HUD original, selección de personajes, pilotos desalineados). | `Docs/Capturas/Antes/`, `Assets/Editor/EvidenceCaptureTool.cs` |
 | Lista ordenada de cambios | Registro con prioridad Alta/Media/Baja y su afectación. | `Docs/Evidencias/GA5-AA3-EV01_Registro_Cambios.md` |
 | Implementar en Editor | Los ajustes se aplican en los scripts y escenas del proyecto. | `Assets/Scripts/*`, `Assets/Scenes/*` |
-| Verificar en Play | 14 pruebas automatizadas (10 PlayMode + 4 EditMode) en verde. | `Assets/Tests/`, `Logs/test_results_*.xml` |
+| Verificar en Play | 40 pruebas automatizadas (36 PlayMode + 4 EditMode) en verde. | `Assets/Tests/`, `Docs/Evidencias/RESULTADO_PRUEBAS.md` |
 | Capturar cada escena | Capturas del estado final de las 4 escenas. | `Docs/Capturas/Despues/` |
 | Carpeta con escenas + capturas | Todo dentro del repositorio. | `Assets/Scenes/` + `Docs/Capturas/` |
 | Máximo 4 archivos Unity | Las 4 escenas ajustadas. | `00_MainMenu`, `01_CharacterSelect`, `02_Gameplay`, `03_Results` |
@@ -134,7 +134,7 @@ de cambios, la herramienta de captura y la verificación por pruebas.
 ### Justificación de cumplimiento
 | Requerimiento | Cómo lo cumple el proyecto | Artefacto |
 | :-- | :-- | :-- |
-| Capturas antes/después | Carpetas `Antes/` y `Despues/` con capturas de las 4 escenas. | `Docs/Capturas/` |
+| Capturas antes/después | Carpetas `Antes/` y `Despues/` con pares comparables (HUD, selección, pilotos) y capturas del juego real. | `Docs/Capturas/` |
 | Estructura e interfaces antes/después | Sección redactada (1 escena OnGUI → 4 escenas Canvas/TMP). | `Docs/Evidencias/GA5-AA4-EV01_Infografia_Comparativa.md` |
 | Concepto gráfico antes/después | Primitivas planas → modelos 3D texturizados + post-proceso neón. | Ídem + capturas |
 | Niveles y mecánicas antes/después | Pista gris lineal → 10 dominios, checkpoints, 4 modos, combate. | Ídem |
@@ -153,7 +153,7 @@ producto. El proyecto **ya generó** el contenido comparativo y las capturas; fa
 | :-- | :-- | :-- | :-- |
 | AA1-EV01 | 🟢 Prototipo y cuestionario listos | 4 escenas + `GA5-AA1-EV01_Cuestionario` | Enviar a 5 usuarios |
 | AA2-EV01 | 🟢 Informe y analítica listos | `GA5-AA2-EV01_Informe_Hallazgos` + `Analitica/` | Completar 2 usuarios reales |
-| AA3-EV01 | 🟢 Registro y capturas "después" | `GA5-AA3-EV01_Registro_Cambios` + `Capturas/Despues` | Capturar "Antes" |
+| AA3-EV01 | 🟢 Ajustes implementados, verificados y capturados (antes/después) | `GA5-AA3-EV01_Registro_Cambios` + `Capturas/` | Subir los cambios al repositorio |
 | AA4-EV01 | 🟢 Contenido comparativo listo | `GA5-AA4-EV01_Infografia_Comparativa` | Montar en Canva y compartir |
 
 ---
@@ -166,7 +166,7 @@ producto. El proyecto **ya generó** el contenido comparativo y las capturas; fa
 2. **El prototipo ya está construido** con las 4 escenas, las mecánicas, las
    interfaces y el audio reactivo, por lo que **no hay excusa técnica** para no
    generar los artefactos: ya existen en el repositorio.
-3. **Verificabilidad:** las 14 pruebas automatizadas demuestran que el prototipo
+3. **Verificabilidad:** las 40 pruebas automatizadas demuestran que el prototipo
    funciona, requisito implícito de toda la guía ("prueba de funcionalidad").
 4. **Evidencia auditable:** cada afirmación apunta a un archivo concreto dentro del
    repositorio público, de modo que el evaluador puede verificarla sin ambigüedad.

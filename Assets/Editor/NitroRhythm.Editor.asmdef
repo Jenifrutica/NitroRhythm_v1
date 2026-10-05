@@ -2,7 +2,8 @@
     "name": "NitroRhythm.Editor",
     "rootNamespace": "",
     "references": [
-        "NitroRhythm"
+        "NitroRhythm",
+        "Unity.TextMeshPro"
     ],
     "includePlatforms": [
         "Editor"

@@ -30,7 +30,7 @@ persecución asimétrica Héroes vs Villano y multijugador local de 1 a 3 jugado
 | :--- | :--- | :--- | :--- |
 | P1 (Cian / Lyra) | `W A S D` | `Espacio` | `Ctrl Izq.` |
 | P2 (Azul / Karel) | `Flechas` | `Shift Der.` / `Numpad 0` | `Numpad 1` |
-| P3 (Villano / Vox) | `I J K L` | `Shift Der.` / `Numpad 0` | `Enter` |
+| P3 (Villano / Vox) | `I J K L` | `U` | `Enter` (lanzar obstáculo) |
 | Pausa | — | `Escape` | — |
 
 ## 4. Modos de juego

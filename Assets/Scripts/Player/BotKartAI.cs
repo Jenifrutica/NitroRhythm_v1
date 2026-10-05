@@ -11,9 +11,10 @@ namespace NitroRhythm.Player
     {
         [Header("Driving")]
         [SerializeField] private float _centerSteering = 0.4f;
-        [SerializeField] private float _jumpCooldown = 0.8f;
+        [SerializeField] private float _jumpCooldown = 0.25f;
         [SerializeField] private float _obstacleLookAhead = 8f;
         [SerializeField] private float _gapCheckDepth = 3f;
+        [SerializeField] private float _gapProbeSeconds = 0.16f;
 
         private PlayerKartController _kart;
         private float _lastJumpTime;
@@ -35,7 +36,7 @@ namespace NitroRhythm.Player
             float vertical = 1f;
             float horizontal = -Mathf.Clamp(transform.position.z * _centerSteering, -1f, 1f);
 
-            if (Time.time - _lastJumpTime > _jumpCooldown && IsObstacleAhead())
+            if (_kart.IsGrounded && Time.time - _lastJumpTime > _jumpCooldown && IsObstacleAhead())
             {
                 _kart.RequestJump();
                 _lastJumpTime = Time.time;
@@ -48,14 +49,17 @@ namespace NitroRhythm.Player
         {
             Vector3 origin = transform.position + Vector3.up * 0.2f;
 
-            // No ground within the gap-check depth means a chasm ahead — jump.
-            if (!Physics.Raycast(origin, Vector3.down, _gapCheckDepth))
+            // Probe the ground AHEAD of the kart (distance grows with speed, so the
+            // jump starts right at the edge instead of after already falling).
+            float probeDistance = Mathf.Clamp(Mathf.Abs(_kart.CurrentSpeed) * _gapProbeSeconds, 2.5f, 12f);
+            Vector3 edge = origin + transform.forward * probeDistance;
+            if (!Physics.Raycast(edge, Vector3.down, _gapCheckDepth, ~0, QueryTriggerInteraction.Ignore))
             {
                 return true;
             }
 
             // A wall / spinning bar / other obstacle ahead — jump over it.
-            if (Physics.Raycast(origin, transform.forward, _obstacleLookAhead))
+            if (Physics.Raycast(origin, transform.forward, _obstacleLookAhead, ~0, QueryTriggerInteraction.Ignore))
             {
                 return true;
             }

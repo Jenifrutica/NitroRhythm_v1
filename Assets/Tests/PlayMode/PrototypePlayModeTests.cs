@@ -180,37 +180,42 @@ namespace NitroRhythm.Tests
         }
 
         [UnityTest]
-        public IEnumerator BadReward_TravelsParabola_ThenReturnsToPhysics()
+        public IEnumerator BadReward_TravelsParabola_ThenExplodesAtTarget()
         {
+            // Markers left by shots from earlier tests would be found by name below.
+            foreach (GameObject stale in Object.FindObjectsByType<GameObject>(FindObjectsSortMode.None))
+                if (stale.name == "ImpactMarker") Object.Destroy(stale);
+            yield return null;
+
             GameObject projectile = GameObject.CreatePrimitive(PrimitiveType.Cube);
             projectile.transform.position = Vector3.zero;
-            BoxCollider collider = projectile.GetComponent<BoxCollider>();
-            collider.isTrigger = true;
+            projectile.GetComponent<BoxCollider>().isTrigger = true;
             Rigidbody projectileBody = projectile.AddComponent<Rigidbody>();
             projectileBody.isKinematic = true;
             projectileBody.useGravity = false;
 
             BadReward reward = projectile.AddComponent<BadReward>();
             Vector3 start = projectile.transform.position;
-            reward.Launch(start, new Vector3(12f, 0f, 0f), 5f);
+            reward.Launch(start, new Vector3(12f, 0f, 0f), 5f, 0.8f);
 
             float t = 0f;
             float peakY = start.y;
-            while (t < 2f)
+            while (t < 0.7f)
             {
                 t += Time.deltaTime;
-                if (projectile != null)
-                {
-                    peakY = Mathf.Max(peakY, projectile.transform.position.y);
-                }
+                if (projectile != null) peakY = Mathf.Max(peakY, projectile.transform.position.y);
                 yield return null;
             }
 
             Assert.Greater(peakY, start.y + 1f, "El proyectil debe elevarse en arco parabólico.");
-            Assert.IsTrue(projectile == null || !projectile.GetComponent<Rigidbody>().isKinematic,
-                "Tras aterrizar, la física debe reactivarse.");
+            // Check this projectile's own marker (other tests' villains may leave ones with the same name).
+            GameObject marker = (GameObject)typeof(BadReward).GetField("_marker", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(reward);
+            Assert.IsNotNull(marker, "Debe mostrar el marcador de impacto mientras vuela.");
 
-            if (projectile != null) Object.Destroy(projectile);
+            yield return new WaitForSeconds(0.5f);
+            Assert.IsTrue(projectile == null, "Tras aterrizar, el proyectil explota y desaparece.");
+            yield return null;   // the projectile's OnDestroy schedules the marker's destruction one frame later
+            Assert.IsTrue(marker == null, "El marcador desaparece con el impacto.");
             yield return null;
         }
 

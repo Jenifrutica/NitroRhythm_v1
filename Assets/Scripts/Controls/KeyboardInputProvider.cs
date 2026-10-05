@@ -6,7 +6,7 @@ namespace NitroRhythm.Controls
     /// <summary>
     /// Keyboard input provider for the three local bindings described in the GDD:
     /// P1 (WASD + Space), P2 (Arrows + Right Shift / Keypad 0) and
-    /// P3 villain (IJKL + Enter).
+    /// P3 villain (IJKL + U to jump + Enter to throw).
     /// Uses the legacy input backend, which the project exposes alongside the
     /// new Input System (Both), keeping WebGL keyboard support simple.
     /// </summary>
@@ -61,7 +61,8 @@ namespace NitroRhythm.Controls
                 case PlayerKartController.InputScheme.PlayerThree:
                     Throttle = (Input.GetKey(KeyCode.I) ? 1f : 0f) - (Input.GetKey(KeyCode.K) ? 1f : 0f);
                     Steer = (Input.GetKey(KeyCode.L) ? 1f : 0f) - (Input.GetKey(KeyCode.J) ? 1f : 0f);
-                    if (Input.GetKeyDown(KeyCode.RightShift) || Input.GetKeyDown(KeyCode.Keypad0)) _jumpLatch = true;
+                    // U (not Right Shift / Numpad 0): those already belong to player 2.
+                    if (Input.GetKeyDown(KeyCode.U)) _jumpLatch = true;
                     if (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter)) _fireLatch = true;
                     break;
             }

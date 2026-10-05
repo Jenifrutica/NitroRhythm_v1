@@ -15,6 +15,20 @@ namespace NitroRhythm.Core
         /// <summary>Extra uniform multiplier applied after normalization.</summary>
         public float Multiplier = 1f;
 
+        /// <summary>
+        /// When enabled, <see cref="WorldOffset"/> is the model's offset in WORLD units
+        /// relative to the parent's origin (the parent kart is scaled non-uniformly, so a
+        /// plain localPosition would be stretched).
+        /// </summary>
+        public bool UseWorldOffset;
+
+        /// <summary>
+        /// When true the model simply follows its parent's scale (used by the character showcase, whose parent is
+        /// scaled to fit the screen layout). Default false: the model keeps a constant world size.
+        /// </summary>
+        public bool InheritParentScale;
+        public Vector3 WorldOffset;
+
         private Vector3 _factor = Vector3.one;
 
         private void Start()
@@ -72,11 +86,25 @@ namespace NitroRhythm.Core
             Transform parent = transform.parent;
             if (parent == null) return;
 
+            if (InheritParentScale)
+            {
+                transform.localScale = _factor;
+                return;
+            }
+
             Vector3 scale = parent.lossyScale;
             transform.localScale = new Vector3(
                 _factor.x / Mathf.Max(0.0001f, scale.x),
                 _factor.y / Mathf.Max(0.0001f, scale.y),
                 _factor.z / Mathf.Max(0.0001f, scale.z));
+
+            if (UseWorldOffset)
+            {
+                transform.localPosition = new Vector3(
+                    WorldOffset.x / Mathf.Max(0.0001f, scale.x),
+                    WorldOffset.y / Mathf.Max(0.0001f, scale.y),
+                    WorldOffset.z / Mathf.Max(0.0001f, scale.z));
+            }
         }
     }
 }

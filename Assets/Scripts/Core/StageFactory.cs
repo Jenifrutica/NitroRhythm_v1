@@ -86,6 +86,8 @@ namespace NitroRhythm.Core
             lightObject.transform.localPosition = localPosition;
 
             Light light = lightObject.AddComponent<Light>();
+
+            light.shadows = LightShadows.None;
             light.type = LightType.Point;
             light.color = color;
             light.intensity = intensity;
@@ -101,6 +103,8 @@ namespace NitroRhythm.Core
             lightObject.transform.rotation = Quaternion.Euler(52f, -34f, 0f);
 
             Light light = lightObject.AddComponent<Light>();
+
+            light.shadows = LightShadows.None;
             light.type = LightType.Directional;
             light.color = new Color(0.8f, 0.86f, 1f);
             light.intensity = intensity;

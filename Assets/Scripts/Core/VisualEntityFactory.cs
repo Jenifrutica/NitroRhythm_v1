@@ -44,7 +44,7 @@ namespace NitroRhythm.Core
         /// Optionally swaps in a Blender FBX from Resources/NitroRhythm/Models and
         /// recolours it so the URP look matches the character palette.
         /// </summary>
-        public static GameObject CreateKartEntity(string entityName, Color color, Transform parent = null, string modelName = null, string textureName = null)
+        public static GameObject CreateKartEntity(string entityName, Color color, Transform parent = null, string modelName = null, string textureName = null, string pilotModelName = null, Vector3? pilotOffset = null, float pilotScale = 1f)
         {
             GameObject entity = GameObject.CreatePrimitive(PrimitiveType.Cube);
             entity.name = entityName;
@@ -68,6 +68,7 @@ namespace NitroRhythm.Core
             KartAnchors.Attach(entity, KartScale);
 
             AttachVisualModel(entity, modelName, textureName, color);
+            AttachPilot(entity, pilotModelName, pilotOffset ?? new Vector3(0f, 0.45f, 0f), color, pilotScale);
 
             return entity;
         }
@@ -80,25 +81,37 @@ namespace NitroRhythm.Core
         /// </summary>
         private static void AttachVisualModel(GameObject entity, string modelName, string textureName, Color color)
         {
-            if (string.IsNullOrEmpty(modelName)) return;
+            if (string.IsNullOrEmpty(modelName))
+            {
+                Debug.LogWarning($"[VisualEntityFactory] {entity.name}: no kart model requested, keeping the placeholder cube.");
+                return;
+            }
 
             GameObject model = Resources.Load<GameObject>($"NitroRhythm/Models/{modelName}");
-            if (model == null) return;
+            if (model == null)
+            {
+                Debug.LogWarning($"[VisualEntityFactory] Model 'NitroRhythm/Models/{modelName}' not found in Resources.");
+                return;
+            }
 
-            GameObject visual = Object.Instantiate(model, entity.transform);
+            GameObject visual = ModelSanitizer.Strip(Object.Instantiate(model, entity.transform));
             visual.name = $"{modelName}_Visual";
 
             // Normalize the (Hunyuan/Blender) model to a consistent world size.
             ModelNormalizer normalizer = visual.AddComponent<ModelNormalizer>();
             normalizer.TargetSize = 4.4f;
             visual.transform.localPosition = Vector3.zero;
-            visual.transform.localRotation = Quaternion.Euler(0f, 180f, 0f);
+            // The FBX nose points to +Z (verified with the showcase renders), which is the kart's
+            // forward axis, so no yaw is applied here (a 180 deg yaw made karts drive backwards).
+            visual.transform.localRotation = Quaternion.identity;
 
             Texture2D texture = LoadTexture(textureName);
             Material material = CreateModelMaterial(color, texture);
             foreach (Renderer modelRenderer in visual.GetComponentsInChildren<Renderer>())
             {
-                modelRenderer.sharedMaterial = material;
+                Material[] shared = new Material[Mathf.Max(1, modelRenderer.sharedMaterials.Length)];
+                for (int i = 0; i < shared.Length; i++) shared[i] = material;
+                modelRenderer.sharedMaterials = shared;
                 modelRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
             }
 
@@ -108,6 +121,7 @@ namespace NitroRhythm.Core
             if (anchors != null && anchors.HoverEffect != null)
             {
                 Light hoverLight = anchors.HoverEffect.gameObject.AddComponent<Light>();
+                hoverLight.shadows = LightShadows.None;
                 hoverLight.type = LightType.Point;
                 hoverLight.color = color;
                 hoverLight.range = 5f;
@@ -116,16 +130,55 @@ namespace NitroRhythm.Core
                 GameObject disc = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
                 disc.name = "HoverGlow";
                 disc.transform.SetParent(anchors.HoverEffect, false);
-                disc.transform.localScale = new Vector3(0.7f, 0.02f, 0.7f);
+                disc.transform.localScale = new Vector3(0.42f, 0.02f, 0.3f);
                 Collider discCollider = disc.GetComponent<Collider>();
                 if (discCollider != null) Object.Destroy(discCollider);
                 Renderer discRenderer = disc.GetComponent<Renderer>();
-                if (discRenderer != null) discRenderer.sharedMaterial = CreateEmissiveMaterial(color, 0.9f);
+                if (discRenderer != null) discRenderer.sharedMaterial = CreateEmissiveMaterial(color, 0.7f);
             }
 
             // Hide the primitive placeholder but keep its collider for physics.
             Renderer placeholder = entity.GetComponent<Renderer>();
             if (placeholder != null) placeholder.enabled = false;
+        }
+
+        private const float KartTargetSize = 4.4f;
+        private const float ShowcaseKartSize = 3.8f;
+
+        /// <summary>
+        /// Seats the pilot model in the kart. The per-character offset was tuned in the showcase
+        /// (kart rotated 180 deg inside the pivot), so it is rotated into the kart's own frame and
+        /// scaled to the in-game kart size.
+        /// </summary>
+        private static void AttachPilot(GameObject entity, string pilotModelName, Vector3 showcaseOffset, Color color, float pilotScale = 1f)
+        {
+            if (string.IsNullOrEmpty(pilotModelName)) return;
+
+            GameObject model = Resources.Load<GameObject>($"NitroRhythm/Models/{pilotModelName}");
+            if (model == null)
+            {
+                Debug.LogWarning($"[VisualEntityFactory] Pilot model '{pilotModelName}' not found in Resources.");
+                return;
+            }
+
+            float k = KartTargetSize / ShowcaseKartSize;
+            GameObject pilot = ModelSanitizer.Strip(Object.Instantiate(model, entity.transform));
+            pilot.name = $"{pilotModelName}_Pilot";
+            // The pilot FBX faces +Z, same as the kart nose in game (visual rotation is identity).
+            pilot.transform.localRotation = Quaternion.identity;
+
+            ModelNormalizer normalizer = pilot.AddComponent<ModelNormalizer>();
+            normalizer.TargetSize = 1.9f * k * Mathf.Max(0.2f, pilotScale);
+            normalizer.UseWorldOffset = true;
+            normalizer.WorldOffset = new Vector3(-showcaseOffset.x, showcaseOffset.y, -showcaseOffset.z) * k;
+
+            Material material = CreateModelMaterial(color, null);
+            foreach (Renderer r in pilot.GetComponentsInChildren<Renderer>())
+            {
+                Material[] shared = new Material[Mathf.Max(1, r.sharedMaterials.Length)];
+                for (int i = 0; i < shared.Length; i++) shared[i] = material;
+                r.sharedMaterials = shared;
+            }
         }
 
         /// <summary>

@@ -16,7 +16,8 @@ cerrar las cuatro evidencias.
 - [x] **UI Canvas + TextMeshPro** rediseñada (menú, selección 3D, opciones, pausa, HUD, resultados).
 - [x] **Rediseño gráfico 3D**: karts con modelo Blender, pista con rejilla neón, post-proceso (Bloom/Vignette/Chromatic Aberration).
 - [x] **Modelos Blender** (`Kart_Neon_01..03`, `Piloto_Neon_01..03`, `PremioMalo.fbx`) con pipeline de anclajes.
-- [x] **Pruebas automatizadas**: 10 PlayMode + 4 EditMode = **14/14 en verde**.
+- [x] **Pruebas automatizadas**: 36 PlayMode + 4 EditMode = **40/40 en verde** (`RESULTADO_PRUEBAS.md`).
+- [x] **Ronda 2**: mundo temático (7 dominios), una pantalla por nivel, villano que ataca, interfaz nueva, modelos propios, música y ambiente por dominio (`GA5-AA3-EV01_Registro_Cambios_Ronda2.md`).
 - [x] **Build WebGL** + `.zip` para compartir.
 - [x] **Capturas** del estado final en `Evidencias/Despues`.
 - [x] **Documentos**: cuestionario AA1, informe AA2 (con analítica), registro AA3, infografía AA4, guía de 5 usuarios.
@@ -25,9 +26,10 @@ cerrar las cuatro evidencias.
 ### Pendiente (acciones de la aprendiza)
 - [ ] Publicar el prototipo y **aplicar el cuestionario a los 5 usuarios** (2 reales).
 - [ ] Completar la fila de los 2 usuarios reales en `Analitica/respuestas.csv` y regenerar gráficos.
-- [ ] **Capturar "Antes"** (versión previa) si se desea la comparativa; el "Después" ya está.
 - [ ] Montar la **infografía comparativa** en Canva y exportar a PDF.
-- [ ] Ajustes finos de balance (HUD ampliado y progresión) según hallazgos P4/P9.
+- [x] Ajustes según hallazgos **P4** (HUD), **P6** (feedback de impacto) y **P9** (progresión y checkpoints): ver `GA5-AA3-EV01_Registro_Cambios.md`.
+- [x] Capturas **"Antes"** (HUD, selección y piloto) y **"Después"** generadas desde el juego real.
+- [ ] Subir los cambios al repositorio (`git commit` + `git push`) para que los enlaces de `ENLACES_EVIDENCIAS.md` funcionen.
 
 ---
 
@@ -92,7 +94,7 @@ python3 "SENA/NitroRythm/Tools/docs/generate_analytics.py"
 | :-- | :-- | :-- | :-- |
 | P1 (Lyra) | `W A S D` | `Espacio` | `Ctrl Izq.` |
 | P2 (Karel) | `Flechas` | `Shift Der.` / `Numpad 0` | `Numpad 1` |
-| P3 (Vox) | `I J K L` | `Shift Der.` / `Numpad 0` | `Enter` |
+| P3 (Vox) | `I J K L` | `U` | `Enter` (lanzar obstáculo) |
 | Pausa | — | `Escape` | — |
 
 ---

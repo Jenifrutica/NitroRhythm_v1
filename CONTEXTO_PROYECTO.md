@@ -2,7 +2,7 @@
 
 > **Documento de traspaso de contexto.** Resume absolutamente todo el estado del
 > proyecto para continuar el desarrollo en una sesión nueva, sin perder información.
-> Última actualización: sesión de desarrollo en `opencode`.
+> Última actualización: 2026-10-04 — Claude Code, **ronda 2** (mundo temático, una pantalla por nivel, villano que ataca, interfaz nueva, modelos reales, música por dominio). La ronda 1 (HUD, SFX, bot, piloto) sigue vigente.
 
 ---
 
@@ -40,11 +40,24 @@ Todo el código vive en `Assets/Scripts/` dentro de la asamblea **`NitroRhythm`*
 (hay un `.asmdef` en `Assets/Scripts/NitroRhythm.asmdef`). El editor está en
 `Assets/Editor/` (asamblea `NitroRhythm.Editor`) y las pruebas en `Assets/Tests/`.
 
+### 1.0 Resumen de la ronda 2 (leer primero)
+- **Una pantalla por nivel:** `GameSession.CurrentLevelIndex`, `SceneFlow.StartNewRun/RestartLevel`, `LevelManager.GenerateSingleLevel`,
+  `LevelIntroCard` (tarjeta con la ilustración del dominio). Al terminar un nivel `CutsceneController` avanza o va a resultados.
+- **`Assets/Scripts/World/`:** `DomainTheme` (tabla de los 7 temas: cielo, luz, niebla, plataforma, props, partículas, post),
+  `DomainDecorator` (viste el nivel; mantiene los props fuera de la pista), `PropFactory`/`ProceduralMeshes` (props procedurales
+  y modelos propios), `HazardVisuals` (peligros, pads, portal, premios), `DomainMaterials` (texturas procedurales), `DomainParticles`.
+- **Modelos propios:** `Resources/NitroRhythm/Props` (Torre1-4, PrizeGood/Bad, TrebleClef, SpikeBall), cielos en `Resources/NitroRhythm/Skies`.
+- **Villano:** correa de distancia, ataque al compás (4 tipos), marcador de impacto, reloj interno si el audio no avanza.
+- **Audio:** `DomainMusic` (música por dominio), `AmbientBed` (ambiente), `SfxLibrary` (+ premio).
+- **Interfaz:** `UIFactory` (marcos neón, barras, anillos, iconos, 3 fuentes), `GameplayHud`, menús, `ScreenFader`, `UIAmbient`, `UIArt`.
+- **Checkpoints:** 13 en total por posición (`LevelManager.ChooseCheckpointSegments`). **K.O.** a 0 de vida (vuelve al checkpoint).
+- Créditos/licencias: `Docs/CREDITOS_Y_LICENCIAS.md`. Registro de ronda 2: `Docs/Evidencias/GA5-AA3-EV01_Registro_Cambios_Ronda2.md`.
+
 ### 1.1 Core (`Assets/Scripts/Core/`)
 | Script | Responsabilidad |
 | :-- | :-- |
 | `TestSceneBootstrapper.cs` | **Arranque de la escena Gameplay.** Lee `GameSession`, crea `LevelManager`, `AudioReactiveMusicController`, jugadores (coloreados y texturizados por personaje), villano, cámaras split-screen, `EnvironmentManager`, `CutsceneController`, `DialogueSystem`, `GameplayHud`, `PauseMenu` y `RespawnOnFall`. |
-| `LevelManager.cs` | Genera la pista procedural de 7 dominios jugables. Dos modos: `BuildTrack()` (fallback lineal) y **`GenerateFromAudio(analysis, levelCount, startX)`** (reactivo). Gestiona checkpoints (inicio + intermedios vía `ActivateCheckpoint`), `CompleteLevel`, `RepositionPlayersToCheckpoint`, registro de jugadores (`Players`). |
+| `LevelManager.cs` | Genera la pista procedural de 7 dominios jugables; evento `CheckpointReached`; `ActivateCheckpoint` devuelve `bool`; checkpoints cada 2 plataformas en dominios 1–2. Dos modos: `BuildTrack()` (fallback lineal) y **`GenerateFromAudio(analysis, levelCount, startX)`** (reactivo). Gestiona checkpoints (inicio + intermedios vía `ActivateCheckpoint`), `CompleteLevel`, `RepositionPlayersToCheckpoint`, registro de jugadores (`Players`). |
 | `GameSession.cs` | Estado persistente entre escenas (`DontDestroyOnLoad`): modo, personajes P1/P2/P3, volumen música/SFX, calibración, `AudioTrackPath`, `Analysis`, `LastScore`. `EnsureExists()`. |
 | `SceneFlow.cs` | Nombres y carga de escenas (`00_MainMenu`, `01_CharacterSelect`, `02_Gameplay`, `03_Results`). |
 | `VisualEntityFactory.cs` | Crea karts (cubo placeholder + modelo FBX), materiales URP (`CreateSolidMaterial`, `CreateEmissiveMaterial`, `CreateNeonMaterial`, `CreateModelMaterial`), carga texturas y modelos desde `Resources`. Oculta el renderer del cubo y añade `KartAnchors`. |
@@ -55,7 +68,7 @@ Todo el código vive en `Assets/Scripts/` dentro de la asamblea **`NitroRhythm`*
 | `EnvironmentManager.cs` | Tema por dominio (cielo/niebla) leído de `PrototypeData` y pitch de música. |
 | `CameraFollow.cs` | Cámara de seguimiento suave (offset local + `SmoothDamp`). |
 | `LevelGoalTrigger.cs` | Meta de nivel; exige que **todos** los jugadores entren. Expone `CurrentWaitingMessage` para el HUD. |
-| `CheckpointComponent.cs` | Trigger de checkpoint intermedio. |
+| `CheckpointComponent.cs` | Trigger de checkpoint + **arco neón** (ámbar → verde al activarse) y SFX. |
 | `RespawnOnFall.cs` | Reaparece jugadores/villano al caer bajo Y = −10. |
 | `SpinningBarComponent.cs`, `MovingHazardComponent.cs`, `SpeedPadComponent.cs`, `BouncingPadComponent.cs` | Obstáculos y pads. |
 | `GameModeManager.cs` | **Solo se conserva por el enum `GameMode`**. Su lógica de menú quedó obsoleta (la UI es por escenas). |
@@ -67,6 +80,8 @@ Todo el código vive en `Assets/Scripts/` dentro de la asamblea **`NitroRhythm`*
 | `AudioAnalysisResult.cs` | Resultado serializable: `bpm`, `beatCount`, `beatEnergy`, `bassEnergy`, `trebleEnergy`. `CreateFlat()` genera datos sintéticos para pruebas. |
 | `AudioAnalysisService.cs` | Análisis **offline sin FFT**: separa graves (low-pass one-pole) y agudos (residual), estima BPM por autocorrelación de onsets y agrega energía por pulso. |
 | `MusicGenerator.cs` | **Loop sintetizado** (kick + sub-bass + hats + arpegio) de respaldo para que la demo funcione siempre (incluido WebGL). |
+| `SfxLibrary.cs` | **SFX procedurales** cacheados (impacto, salto, turbo, checkpoint, disparo, meta, hover y bucle de motor). Sin archivos de audio. |
+| `SfxPlayer.cs` | Pool de 8 `AudioSource` 2D; aplica `GameSession.SfxVolume`. |
 | `AudioReactiveMusicController.cs` | Carga el clip (URL/ruta con `UnityWebRequestMultimedia` o el loop generado), pre-analiza, reproduce y expone `Bass`/`Treble`/`Energy` en vivo. Evento `AnalysisReady`. |
 | `ProceduralTrackPlan.cs` | `TrackSegment` (longitud, hueco, pads, tipo de obstáculo) y `ProceduralTrackPlan`. |
 | `ProceduralTrackBuilder.cs` | Traduce el análisis a pista: **graves → huecos/saltos/rampas**, **agudos → obstáculos/pads**, **BPM → espaciado/velocidad**. |
@@ -87,8 +102,9 @@ Todo el código vive en `Assets/Scripts/` dentro de la asamblea **`NitroRhythm`*
 | Script | Responsabilidad |
 | :-- | :-- |
 | `PlayerKartController.cs` | Kart arcade: `Rigidbody`, gravedad custom, salto con `SphereCast`, `Continuous` collision, `ApplyCharacterStats(speed,grip,power)`, boost temporal, implementa `IDamageable`/`ITargetSelectable`. |
-| `KartHealthSpeed.cs` | Vida, penalización −40 % de velocidad 3 s y flash rojo por viewport. |
-| `BotKartAI.cs` | Bot que conduce y salta obstáculos. |
+| `KartHealthSpeed.cs` | Vida, penalización −40 % de velocidad 3 s, flash rojo por viewport, **sacudida de cámara, SFX y evento estático `Hit`**; expone `SlowTimeLeft`. |
+| `EngineSound.cs` | Bucle de motor con tono/volumen según la velocidad (solo P1). |
+| `BotKartAI.cs` | Bot que conduce y salta: sondea el suelo **por delante** (velocidad × 0.16 s), salto solo en suelo, espera 0.25 s. |
 
 ### 1.6 Narrativa (`Assets/Scripts/Narrative/`)
 - `DialogueSystem.cs`: tarjeta de cómic (Canvas + TMP) que consume `CutsceneDefinition`.
@@ -107,7 +123,7 @@ Todo el código vive en `Assets/Scripts/` dentro de la asamblea **`NitroRhythm`*
 | `OptionsPanel.cs` | Sliders de volumen música/SFX y calibración. |
 | `CharacterSelectScreen.cs` | **Garaje 3D**: 3 karts sobre pedestales + tarjetas con stats y asignación P1/P2 + 4 modos. |
 | `CharacterDisplay.cs` | Showcase 3D de un personaje (kart + piloto, pedestal, luz, rotación, selección, clic). |
-| `GameplayHud.cs` | HUD: puntuación, dominio, velocímetro radial, barra de progreso, vida y mensaje de espera; pulso al ritmo del bajo. |
+| `GameplayHud.cs` | HUD: puntuación, dominio, **tiempo**, **posición/distancia al villano**, **potenciadores**, vida P1/P2, velocímetro radial, barra de progreso, avisos de **checkpoint** e **impacto**, mensaje de espera; pulso al ritmo del bajo. Helpers estáticos `FormatTime` y `ComputeRank`. |
 | `PauseMenu.cs` | Pausa (Escape): reanudar / reiniciar / menú. |
 | `ResultsScreen.cs` | Podio 3D + puntuación y resumen. |
 
@@ -163,30 +179,36 @@ Todo el código vive en `Assets/Scripts/` dentro de la asamblea **`NitroRhythm`*
 ## 3. Tareas pendientes, bugs detectados y por implementar
 
 ### 3.1 Bugs / detalles conocidos
-1. **Piloto de Lyra desalineado**: los FBX tienen orígenes distintos; el piloto de Lyra
-   queda ligeramente desplazado de su kart (Karel y Vox se ven bien). Ajustar
-   `localPosition` por personaje en `CharacterDisplay.SpawnModel` (calls al final de `Build`).
+1. ~~**Piloto de Lyra desalineado**~~ ✅ **Resuelto.** Los pilotos de Lyra y Karel estaban fuera del kart
+   (−2.13 y +2.43 u) y ninguno iba sentado. Ahora `CharacterDefinition.pilotOffset` (en
+   `prototype_data.json`) coloca cada piloto en el asiento; lo verifica `CharacterDisplayAlignmentTests`.
 2. **`SampleScene.unity`** es un remanente legacy con el `Bootstrapper`; se puede eliminar.
 3. **Código muerto**: `GameModeManager` (solo por el enum), `ObstacleLauncher` (no enganchado),
    `EnvironmentManager` (funciona pero podría integrarse mejor con el stage 3D).
 4. **Escalado del modelo**: si se cambian de modelos, `ModelNormalizer.TargetSize` (kart 3.8–4.4,
-   piloto 1.9) debe reajustarse.
+   piloto 1.9) debe reajustarse; después reajustar `pilotOffset` (ver `Docs/Hunyuan/PROMPTS_HUNYUAN.md`).
 5. **Audio externo**: `AudioReactiveMusicController` intenta cargar `GameSession.AudioTrackPath`
    (URL/ruta); no hay UI para elegir archivo todavía. En WebGL solo funciona con URL.
 6. **TMP**: los recursos esenciales de TMP se copiaron a `Assets/TextMesh Pro/` (fuente + shaders).
-   Si se borra esa carpeta, los textos no renderizan.
+   Si se borra esa carpeta, los textos no renderizan. La fuente por defecto **no tiene "¡"** (usar texto sin él).
+7. **Bot**: ya cruza los huecos, pero puede chocar con una barrera justo después de aterrizar (el generador
+   coloca obstáculos del 20 al 80 % de cada plataforma); el respawn lo recupera.
+8. **El villano corre muy lejos** (el HUD llega a mostrar "VOX A 180 m"): es diseño original, pero conviene
+   revisar `VillainBoss` si se quiere una persecución más ajustada.
 
-### 3.2 Mejoras pendientes (de los hallazgos de la prueba)
-- **HUD ampliado** (pregunta 4 = 3.67/5): añadir posición en pista, potenciadores activos y tiempo.
-- **Progresión/checkpoints** (pregunta 9 = 3.67/5): suavizar la dificultad inicial y señalizar mejor los checkpoints.
-- **Feedback de impacto** (pregunta 6): reforzar aviso visual/sonoro al recibir un proyectil.
-- **Sonido**: no hay SFX (solo música). Añadir bus de audio, SFX de motor/salto/impacto.
-- **Animaciones**: los pilotos son estáticos (no hay Animator/AnimationClip en uso).
+### 3.2 Mejoras de los hallazgos de la prueba
+- ✅ **HUD ampliado (P4):** tiempo, posición, distancia al villano, potenciadores, vida P1/P2.
+- ✅ **Progresión/checkpoints (P9):** rampa de dificultad (huecos ×0.6→1.0, umbral de agudos 0.5→0.35, tramos
+  seguros 3→1) y checkpoints visibles.
+- ✅ **Feedback de impacto (P6):** sacudida de cámara, destello, aviso y SFX.
+- ✅ **Sonido:** SFX procedurales + motor. (Falta un bus/mezclador de audio real y SFX para pickups.)
+- **Animaciones:** los pilotos siguen siendo estáticos (no hay Animator/AnimationClip en uso).
+- **Modelos:** los pilotos se ven pequeños; mejorar con Hunyuan3D (paquete en `Docs/Hunyuan/`).
 
 ### 3.3 Tareas de evidencia SENA (no técnicas)
 - Diligenciar los **2 usuarios reales** en `Docs/Analitica/respuestas.csv` y regenerar con
   `Tools/docs/generate_analytics.py` (ya hay 3 simulados; promedio 4.27/5).
-- Capturar el **"Antes"** (`Docs/Capturas/Antes/` está vacío).
+- ✅ Capturas **"Antes"/"Después"** hechas (`Docs/Capturas/`); enlaces en `Docs/Evidencias/ENLACES_EVIDENCIAS.md`.
 - Montar la **infografía comparativa** en Canva con el contenido de AA4.
 - Publicar la build (Netlify Drop / itch.io / S3+CloudFront) y aplicar el cuestionario a 5 usuarios.
 
@@ -246,13 +268,38 @@ cd "/home/jenifrutica/SENA/NitroRythm/Builds/WebGL" && python3 -m http.server 80
 ## 5. Estado de verificación
 
 - **Compilación:** OK (0 errores, 0 advertencias).
-- **Pruebas:** **14/14 en verde** (10 PlayMode + 4 EditMode).
+- **Pruebas:** **40/40 en verde** (36 PlayMode + 4 EditMode; 5 generadores de capturas se omiten sin `NITRO_SHOT_DIR`). Detalle en `Docs/Evidencias/RESULTADO_PRUEBAS.md`.
   - Resultados en `My project/Logs/test_results_playmode.xml` y `test_results_editmode.xml`.
-- **Build WebGL:** OK (`Builds/WebGL`, Brotli + Decompression Fallback → funciona en cualquier hosting).
+- **Builds (ronda 2):** WebGL en `My project/Builds/WebGL` (**31 MB**, humo en Chromium: 0 errores) → `SENA/NitroRythm/Builds/NitroRhythm_WebGL_v1.2.zip`; Linux en `My project/Builds/Linux` (arranca sin excepciones) → `NitroRhythm_Linux_v1.2.zip`. Lanzadores: `Builds/Jugar_NitroRhythm.sh` y `Builds/Jugar_Linux.sh`. **Aún sin subir al Release** (el `v1.0-prototype` tiene la build antigua). `Assets/link.xml` preserva `UnityEngine.PhysicsModule`.
 - **Repo:** `https://github.com/Jenifrutica/NitroRhythm_v1` (público), 3 commits.
 - **Release:** `v1.0-prototype` con `NitroRhythm_WebGL.zip` (33 MB).
 
 ---
+
+### 5.1 Capturas de evidencia y trucos de CLI (aprendidos)
+
+- Pruebas generadoras: `GameplayEvidenceCapture` (`CaptureEveryDomain`, `CaptureInterfaceScreens`, `CaptureVillainAttacks`, ...) y
+  `CharacterDisplayAlignmentTests`; salida con `NITRO_SHOT_DIR`. Panorámica fija por dominio: se desactivan las cámaras de juego y se
+  usa una `OverviewCam` (el kart con bot cae en los huecos y la cámara de seguimiento queda tapada).
+- Builds: `-executeMethod NitroRhythm.EditorTools.PrototypeSceneBuilder.BuildWebGL` / `.BuildLinux` (regeneran las 4 escenas: restaurar con
+  `git checkout -- Assets/Scenes`). Fuentes TMP: `...FontAssetBuilder.Build`. Materiales base: `...PrototypeSceneBuilder.EnsureMaterials`.
+- Sin dispositivo de audio (batch) `AudioSource.time` no avanza: el villano usa un reloj de compás interno.
+- El material de partículas debe estar configurado como transparente/aditivo (si no, salen cuadrados blancos): `DomainMaterials.ConfigureAdditive`.
+- `Time.captureDeltaTime` + `timeScale=0` (tarjeta de nivel): usar `WaitForSecondsRealtime` en las capturas.
+- Una orden `rm` con comodín tras un `cd` es bloqueada por el sistema de seguridad; no hace falta (las capturas se sobrescriben).
+
+- Las capturas se generan con pruebas PlayMode que **solo corren si existe `NITRO_SHOT_DIR`**
+  (`CharacterDisplayAlignmentTests`, `GameplayEvidenceCapture`). Se pasa con `flatpak run --env=NITRO_SHOT_DIR=...`.
+- Para renderizar **no usar `-nographics`** (hace falta GPU). Con gráficos funciona en batch (`Camera.Render` a
+  `RenderTexture`); `ScreenCapture`/`WaitForEndOfFrame` se **cuelgan** en batch sin ventana.
+- El HUD (Canvas overlay) se captura moviéndolo a una capa privada con una cámara de UI y componiendo sobre el 3D.
+- En batch los fotogramas son lentos: usar `Time.captureDeltaTime = 1/30` y tiempo escalado para los avisos del HUD.
+- El sandbox de Flatpak **no ve el scratchpad** (`/tmp/claude-...`): los scripts de Blender/Unity deben estar dentro
+  del proyecto (p. ej. `Docs/Tools/blender/measure_bounds.py`).
+- Los bounds de `SkinnedMeshRenderer` en modo edición no son fiables; medir en PlayMode.
+- No usar `pkill -f` con un patrón que aparezca en la propia línea de comando (mata el shell): filtrar con
+  `ps ... | grep '[U]nity...'` y matar por PID.
+- La cultura regional (es-CO) formatea decimales con coma: usar `CultureInfo.InvariantCulture` en textos del HUD.
 
 ## 6. Prompt sugerido para la nueva sesión
 
@@ -271,7 +318,7 @@ Contexto rápido:
   sandbox de Unity Hub: flatpak run --command=".../Editor/Unity" com.unity.UnityHub
   -batchmode -nographics ...
 - Blender está en flatpak (org.blender.Blender).
-- Las 14 pruebas pasan (10 PlayMode + 4 EditMode).
+- Las 40 pruebas pasan (36 PlayMode + 4 EditMode).
 
 Tareas prioritarias:
 1. Corregir la alineación del piloto de Lyra en CharacterDisplay.
@@ -292,4 +339,4 @@ y luego propón un plan corto antes de tocar código.
 - El `.gitignore` de Unity excluye `Library/`, `Builds/`, `Temp/`, `Obj/`, `Logs/`, `UserSettings/`.
 - No hay secretos en el repo (se verificó). `mcp_server.py` y `openclaw.json` son tooling MCP sin credenciales.
 - La carpeta `My project` pesa ~3.5 GB por `Library/` (no se sube).
-- Los commits se hicieron **sin `Co-Authored-By`**.
+- Los commits se hicieron **sin `Co-Authored-By`** (regla del usuario: no añadirlo ni hacer commit/push sin pedirlo).

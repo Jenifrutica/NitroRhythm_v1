@@ -172,6 +172,17 @@ namespace NitroRhythm.EditorTools
             EnsureMaterial("NitroRhythm/Materials/BaseLit", "Universal Render Pipeline/Lit");
             EnsureMaterial("NitroRhythm/Materials/BaseUnlit", "Universal Render Pipeline/Unlit");
             EnsureMaterial("NitroRhythm/Materials/BaseUI", "UI/Default");
+            // Shaders used at runtime by the domain themes. Referencing them from Resources
+            // materials makes sure they are included in (WebGL) builds.
+            EnsureMaterial("NitroRhythm/Materials/BaseParticles", "Universal Render Pipeline/Particles/Unlit");
+            Material particles = AssetDatabase.LoadAssetAtPath<Material>("Assets/Resources/NitroRhythm/Materials/BaseParticles.mat");
+            if (particles != null)
+            {
+                NitroRhythm.World.DomainMaterials.ConfigureAdditive(particles);
+                EditorUtility.SetDirty(particles);
+            }
+            EnsureMaterial("NitroRhythm/Materials/SkyProcedural", "Skybox/Procedural");
+            EnsureMaterial("NitroRhythm/Materials/SkyPanoramic", "Skybox/Panoramic");
 
             AssetDatabase.SaveAssets();
         }
@@ -207,6 +218,53 @@ namespace NitroRhythm.EditorTools
         }
 
         // ----------------------------------------------------------- web build
+
+        /// <summary>Creates/updates the Resources base materials (no scene regeneration).</summary>
+        [MenuItem("NitroRhythm/Ensure Base Materials")]
+        public static void EnsureMaterials()
+        {
+            EnsureBaseMaterials();
+            AssetDatabase.SaveAssets();
+            AssetDatabase.Refresh();
+            Debug.Log("[PrototypeSceneBuilder] Base materials ready.");
+        }
+
+        [MenuItem("NitroRhythm/Build Linux")]
+        public static void BuildLinux()
+        {
+            BuildAll();
+
+            string outputDir = Path.Combine(Directory.GetCurrentDirectory(), "Builds", "Linux");
+            Directory.CreateDirectory(outputDir);
+
+            BuildPlayerOptions options = new BuildPlayerOptions
+            {
+                scenes = SceneOrder,
+                locationPathName = Path.Combine(outputDir, "NitroRhythm.x86_64"),
+                target = BuildTarget.StandaloneLinux64,
+                options = BuildOptions.None
+            };
+
+            BuildPipeline.BuildPlayer(options);
+            Debug.Log($"[PrototypeSceneBuilder] Linux build finished at {outputDir}");
+        }
+
+        /// <summary>Development WebGL build with full stack traces (for diagnosing runtime errors in the browser).</summary>
+        public static void BuildWebGLDebug()
+        {
+            BuildAll();
+            PlayerSettings.WebGL.compressionFormat = WebGLCompressionFormat.Disabled;
+            PlayerSettings.WebGL.exceptionSupport = WebGLExceptionSupport.FullWithStacktrace;
+            string outputDir = Path.Combine(Directory.GetCurrentDirectory(), "Builds", "WebGLDebug");
+            Directory.CreateDirectory(outputDir);
+            BuildPipeline.BuildPlayer(new BuildPlayerOptions
+            {
+                scenes = SceneOrder,
+                locationPathName = outputDir,
+                target = BuildTarget.WebGL,
+                options = BuildOptions.Development
+            });
+        }
 
         [MenuItem("NitroRhythm/Build WebGL")]
         public static void BuildWebGL()

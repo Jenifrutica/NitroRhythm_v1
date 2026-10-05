@@ -20,7 +20,16 @@ namespace NitroRhythm.Core
         /// <summary>Message shown by the HUD when waiting for the other player(s).</summary>
         public static string CurrentWaitingMessage { get; private set; } = "";
 
+        /// <summary>Clears the (static) co-op waiting message when a new level screen starts.</summary>
+        public static void ResetMessage() => CurrentWaitingMessage = "";
+
+        /// <summary>Seconds the other players get to arrive once the first one has reached the goal.</summary>
+        public const float GraceSeconds = 6f;
+
+        // Arrivals are remembered (not tracked frame by frame): at race speed a kart crosses the goal zone in a
+        // fraction of a second, so two players are almost never inside it at the same instant.
         private readonly HashSet<PlayerKartController> _insidePlayers = new HashSet<PlayerKartController>();
+        private float _graceTimer;
         private LevelManager _levelManager;
 
         private void Start()
@@ -45,6 +54,7 @@ namespace NitroRhythm.Core
             if (_levelManager.CurrentLevel != LevelNumber)
             {
                 _insidePlayers.Clear();
+                _graceTimer = 0f;
                 CurrentWaitingMessage = "";
                 return;
             }
@@ -54,7 +64,9 @@ namespace NitroRhythm.Core
 
             UpdateWaitingMessage();
 
-            if (AllActivePlayersInside())
+            if (_insidePlayers.Count > 0) _graceTimer += Mathf.Min(Time.unscaledDeltaTime, 0.1f);
+
+            if (AllActivePlayersInside() || _graceTimer >= GraceSeconds)
             {
                 StartLevelEscape();
             }
@@ -62,7 +74,8 @@ namespace NitroRhythm.Core
 
         private void UpdateWaitingMessage()
         {
-            if (_levelManager.Players.Count <= 1)
+            // Only meaningful once somebody has reached the goal and the others are still racing.
+            if (_levelManager.Players.Count <= 1 || _insidePlayers.Count == 0)
             {
                 CurrentWaitingMessage = "";
                 return;
@@ -71,7 +84,7 @@ namespace NitroRhythm.Core
             System.Collections.Generic.List<string> missing = new System.Collections.Generic.List<string>();
             foreach (PlayerKartController player in _levelManager.Players)
             {
-                if (!_insidePlayers.Contains(player))
+                if (!IsOut(player) && !_insidePlayers.Contains(player))
                 {
                     missing.Add(DisplayName(player));
                 }
@@ -80,8 +93,8 @@ namespace NitroRhythm.Core
             CurrentWaitingMessage = missing.Count switch
             {
                 0 => "",
-                1 => $"Esperando a {missing[0]}...",
-                _ => $"Esperando a {string.Join(" & ", missing)}..."
+                1 => $"Esperando a {missing[0]}...  {Mathf.CeilToInt(GraceSeconds - _graceTimer)}",
+                _ => $"Esperando a {string.Join(" & ", missing)}...  {Mathf.CeilToInt(GraceSeconds - _graceTimer)}"
             };
         }
 
@@ -107,21 +120,28 @@ namespace NitroRhythm.Core
             if (kart == null || !_levelManager.Players.Contains(kart)) return;
 
             _insidePlayers.Add(kart);
+            kart.ControlLocked = true;   // hold the kart on the goal platform while the others arrive
         }
 
         private void OnTriggerExit(Collider other)
         {
-            PlayerKartController kart = other.GetComponentInParent<PlayerKartController>();
-            if (kart != null)
-            {
-                _insidePlayers.Remove(kart);
-            }
+            // Intentionally empty: an arrival stays counted even if the kart rolls out of the zone.
+        }
+
+        /// <summary>A player that is K.O. or has fallen off the track cannot be waited for.</summary>
+        private static bool IsOut(PlayerKartController player)
+        {
+            if (player == null || player.transform.position.y < -5f) return true;
+            KartHealthSpeed health = player.GetComponent<KartHealthSpeed>();
+            return health != null && health.IsDown;
         }
 
         private bool AllActivePlayersInside()
         {
+            if (_insidePlayers.Count == 0) return false;
             foreach (PlayerKartController player in _levelManager.Players)
             {
+                if (IsOut(player)) continue;
                 if (!_insidePlayers.Contains(player)) return false;
             }
             return true;
@@ -129,6 +149,7 @@ namespace NitroRhythm.Core
 
         private void StartLevelEscape()
         {
+            NitroRhythm.Audio.SfxPlayer.Play(NitroRhythm.Audio.SfxLibrary.Goal, 0.8f);
             if (CutsceneController.Instance != null)
             {
                 CutsceneController.Instance.BeginLevelEscape(LevelNumber);

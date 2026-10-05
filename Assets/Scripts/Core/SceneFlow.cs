@@ -15,19 +15,33 @@ namespace NitroRhythm.Core
         public static void LoadMainMenu() => Load(MainMenu);
         public static void LoadCharacterSelect() => Load(CharacterSelect);
         public static void LoadGameplay() => Load(Gameplay);
+
+        /// <summary>Starts a new run from the first domain.</summary>
+        public static void StartNewRun()
+        {
+            GameSession.EnsureExists().BeginRun();
+            Load(Gameplay);
+        }
+
+        /// <summary>Restarts the current domain (totals rewind to the level start).</summary>
+        public static void RestartLevel()
+        {
+            GameSession.EnsureExists().RestartLevel();
+            Load(Gameplay);
+        }
         public static void LoadResults() => Load(Results);
 
         public static void Load(string sceneName)
         {
-            if (UnityEngine.Application.CanStreamedLevelBeLoaded(sceneName))
-            {
-                SceneManager.LoadScene(sceneName);
-            }
-            else
+            string target = sceneName;
+            if (!UnityEngine.Application.CanStreamedLevelBeLoaded(sceneName))
             {
                 UnityEngine.Debug.LogWarning($"[SceneFlow] Scene '{sceneName}' is not in Build Settings; loading {MainMenu} instead.");
-                SceneManager.LoadScene(MainMenu);
+                target = MainMenu;
             }
+
+            // Fade to black, load, and let the new scene fade in.
+            NitroRhythm.UI.ScreenFader.Transition(() => SceneManager.LoadScene(target));
         }
     }
 }

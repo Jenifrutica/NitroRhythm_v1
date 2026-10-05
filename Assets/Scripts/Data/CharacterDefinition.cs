@@ -24,6 +24,19 @@ namespace NitroRhythm.Data
         public string texture = "Lyra";
         public string description = "";
 
+        /// <summary>
+        /// Local offset of the pilot inside the showcase pivot. Each FBX exports with a
+        /// different origin, so this is tuned per character (measured by
+        /// CharacterDisplayAlignmentTests).
+        /// </summary>
+        public Vector3 pilotOffset = new Vector3(0f, 0.45f, 0f);
+
+        /// <summary>Extra yaw (degrees) of the showcase 3/4 view, for models exported facing another way.</summary>
+        public float modelYawOffset = 0f;
+
+        /// <summary>Multiplier on the pilot's size (Lyra's lotus pose makes her bounding box huge, so she needs more).</summary>
+        public float pilotScale = 1f;
+
         public bool IsVillain => string.Equals(role, "villain", StringComparison.OrdinalIgnoreCase);
 
         public Color Color => ParseHex(colorHex, Color.cyan);

@@ -37,10 +37,20 @@ tiene su propia paleta, dificultad y pista generada a partir de la música.
 ### Mecánicas
 - Movimiento arcade con `Rigidbody` y colisión continua.
 - **Salto** con verificación de suelo por `SphereCast`.
-- **Checkpoints intermedios** y reaparición al caer (conservando el impulso).
+- **13 checkpoints en toda la carrera** (arcos con tus torres-altavoz, ámbar → verde con aviso en pantalla) y reaparición al caer (conservando el impulso).
+- **HUD completo**: tiempo, posición en pista y distancia al villano, potenciadores activos (turbo / ralentizado), vida de P1 y P2, velocímetro y barra de progreso.
+- **Retroalimentación de impacto**: sacudida de cámara, destello rojo, aviso "IMPACTO!" y sonido.
+- **Efectos de sonido procedurales** (salto, turbo, checkpoint, disparo, meta, hover y motor) que respetan el volumen de efectos.
+- **Dificultad progresiva suave**: los primeros dominios tienen huecos más cortos, menos peligros y un tramo seguro al inicio.
+- **Una pantalla por nivel** con tarjeta de introducción: 7 dominios con cielo, luz, niebla, plataformas, props,
+  partículas, **música y ambiente propios** (Percusalia, Echoris, Bassline Abyss, Arpeggion, Treble Spire, Noctua Chord,
+  Void Crescendo).
+- **Interfaz nueva**: fuentes Orbitron/Rajdhani, iconos Material, tarjetas neón, retratos del concept art, rango S/A/B/C.
+- **Premios recogibles** (turbo) y tus modelos reales: karts con piloto sentado, torres-altavoz, premios, clave de sol y bola de espinas.
 - Pads de **salto** y de **velocidad**, rampas, barras giratorias y hazards móviles.
-- **Combate del villano**: proyectil parabólico (`Lerp` + `Sin`), daño de proximidad,
-  −15 % de vida y −40 % de velocidad por 3 s con flash en pantalla.
+- **Combate del villano**: ataca **al compás de la música** con 4 ataques (directo, ráfaga, mina y barrera giratoria),
+  marca en el suelo dónde caerá cada proyectil y apunta a donde estará el jugador; daño por área, −15 % de vida y
+  −40 % de velocidad por 3 s. Si te quedas sin vida, K.O.: vuelves al checkpoint con la vida llena.
 - **Cooperación**: ambos héroes deben cruzar la meta ("Esperando a…").
 
 ### Generación reactiva al audio
@@ -75,7 +85,7 @@ por lo que la demo funciona siempre (incluso en WebGL).
 | :-- | :-- | :-- | :-- |
 | P1 (Lyra, cian) | `W A S D` | `Espacio` | `Ctrl Izq.` |
 | P2 (Karel, azul) | `Flechas` | `Shift Der.` / `Numpad 0` | `Numpad 1` |
-| P3 (Vox, rojo) | `I J K L` | `Shift Der.` / `Numpad 0` | `Enter` |
+| P3 (Vox, rojo) | `I J K L` | `U` | `Enter` (lanzar obstáculo) |
 | Pausa | — | `Escape` | — |
 
 ---
@@ -85,7 +95,7 @@ por lo que la demo funciona siempre (incluso en WebGL).
 - **Unity 6000.5.8f1** (URP 17).
 - **Input System** + backend legacy (para WebGL).
 - **TextMeshPro** (UI Canvas).
-- **Unity Test Framework** (NUnit) — 14 pruebas.
+- **Unity Test Framework** (NUnit) — 40 pruebas automáticas (36 PlayMode + 4 EditMode).
 - **Blender 5.2** (bpy) para generar/exportar modelos.
 
 ---
@@ -102,16 +112,17 @@ Assets/
     Materials/            Materiales base URP (garantizan shaders en el build)
   Scenes/         00_MainMenu · 01_CharacterSelect · 02_Gameplay · 03_Results
   Scripts/
-    Audio/        Análisis musical, generador de loop, plan de pista reactiva
+    Audio/        Análisis musical, generador de loop, plan de pista reactiva, SFX procedurales
     Combat/       Villano, proyectil, interfaces de daño/objetivo
     Controls/     IInputProvider + teclado + scripted (bot)
     Core/         LevelManager, GameSession, SceneFlow, factoría visual, stage, post-fx
+    World/        Temas por dominio, props procedurales y propios, partículas, peligros y decorador
     Data/         Definiciones cargadas desde JSON
     Narrative/    DialogueSystem + CutsceneController
     Player/       PlayerKartController, salud/velocidad, bot
     UI/           UIFactory + menú, selección 3D, opciones, pausa, HUD, resultados
   Tests/
-    PlayMode/     10 pruebas de sistemas en ejecución
+    PlayMode/     36 pruebas de sistemas en ejecución (+ 5 generadores de capturas)
     EditMode/     4 pruebas de escenas/recursos
 Tools/            Scripts de Blender (modelos) y de documentos
 ```
@@ -126,6 +137,10 @@ Tools/            Scripts de Blender (modelos) y de documentos
    **NitroRhythm ▸ Build Prototype Scenes**.
 4. Abra `Assets/Scenes/00_MainMenu.unity` y pulse **Play**.
 
+### Jugar la build
+- **Web:** `Builds/Jugar_NitroRhythm.sh` (sirve la build WebGL y abre el navegador).
+- **Linux:** `Builds/Linux/NitroRhythm.x86_64` (ver `Builds/Jugar_Linux.sh`).
+
 ### Compilar para WebGL
 Menú **NitroRhythm ▸ Build WebGL** → salida en `Builds/WebGL` (Brotli + fallback,
 funciona en cualquier hosting estático).
@@ -136,7 +151,7 @@ funciona en cualquier hosting estático).
 # O por línea de comandos:
 Unity -batchmode -runTests -testPlatform PlayMode -projectPath <ruta>
 ```
-Resultado actual: **14/14 en verde**.
+Resultado actual: **40/40 en verde** (detalle en [`Docs/Evidencias/RESULTADO_PRUEBAS.md`](Docs/Evidencias/RESULTADO_PRUEBAS.md)).
 
 ### Regenerar modelos (Blender)
 ```bash
@@ -156,6 +171,10 @@ Toda la documentación del proyecto está dentro de este repositorio, en la carp
 - 🔧 **[Registro de cambios](Docs/Evidencias/GA5-AA3-EV01_Registro_Cambios.md)** (antes/después).
 - 🖼️ **[Infografía comparativa](Docs/Evidencias/GA5-AA4-EV01_Infografia_Comparativa.md)**.
 - 🗺️ **[Plan de ejecución](Docs/Evidencias/PLAN_EJECUCION.md)**.
+- ✅ **[Resultado de las pruebas](Docs/Evidencias/RESULTADO_PRUEBAS.md)** (25 aprobadas).
+- 🔗 **[Enlaces exactos de cada evidencia](Docs/Evidencias/ENLACES_EVIDENCIAS.md)**.
+- 🧾 **[Créditos y licencias](Docs/CREDITOS_Y_LICENCIAS.md)** (fuentes OFL, HDRIs CC0, iconos Apache 2.0).
+- 🧊 **[Paquete de referencia para Hunyuan3D](Docs/Hunyuan/PROMPTS_HUNYUAN.md)** (vistas y prompts de los personajes).
 - 📈 **[Analítica](Docs/Analitica/)** (respuestas CSV, gráficos y resumen).
 - 📸 **[Capturas](Docs/Capturas/Despues/)** del prototipo final.
 - 🧰 **[Scripts de herramientas](Docs/Tools/)** (Blender y documentos).
@@ -181,7 +200,8 @@ cd NitroRhythm && python3 -m http.server 8080
 - [x] Audio reactivo, 4 modos, combate, checkpoints.
 - [x] Narrativa data-driven y 10 dominios.
 - [x] Modelos 3D texturizados + post-proceso neón.
-- [x] 14/14 pruebas automatizadas.
+- [x] 40/40 pruebas automatizadas.
+- [x] HUD ampliado, checkpoints visibles, feedback de impacto y SFX (hallazgos P4, P6 y P9).
 - [x] Build WebGL publicable.
 
 ---

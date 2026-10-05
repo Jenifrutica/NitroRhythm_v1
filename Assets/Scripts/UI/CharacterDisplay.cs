@@ -22,12 +22,21 @@ namespace NitroRhythm.UI
         private Light _rim;
         private Renderer _ring;
         private Color _accent;
-        private float _spin = 28f;
+        // Showcase: kart and pilot face the camera, with a gentle sway.
+        private const float BaseYaw = 0f;
+        private float _swayAmplitude = 10f;
+        private float _swaySpeed = 0.7f;
+        private float _clock;
+        private float _phase;
         private float _scaleTarget = 1f;
+
+        /// <summary>Size factor set by the screen layout so the kart matches its card at any window shape.</summary>
+        public float LayoutScale = 1f;
 
         public void Build(CharacterDefinition def, Vector3 groundPosition, bool pedestal = true, bool clickable = true)
         {
             Definition = def;
+            _phase = 0f;   // every character starts facing the camera
             _accent = def.Accent;
             transform.position = groundPosition;
 
@@ -57,7 +66,8 @@ namespace NitroRhythm.UI
             pivotObject.AddComponent<SlowBob>();
 
             SpawnModel(def, def.kartModel, _pivot, Vector3.zero, Quaternion.Euler(0f, 180f, 0f), 3.8f, true);
-            SpawnModel(def, def.pilotModel, _pivot, new Vector3(0f, 0.45f, 0f), Quaternion.identity, 1.9f, false);
+            // Pilot FBX faces +Z (like the kart nose); the kart is turned 180 deg, so the pilot must be too.
+            SpawnModel(def, def.pilotModel, _pivot, def.pilotOffset, Quaternion.Euler(0f, 180f, 0f), 1.9f * Mathf.Max(0.2f, def.pilotScale), false);
 
             _rim = StageFactory.AddRimLight(transform, new Vector3(0f, 3.2f, -0.4f), _accent, 2.4f, 9f);
             StageFactory.AddRimLight(transform, new Vector3(-1.6f, 1.2f, 1.6f), Color.white, 0.5f, 6f);
@@ -81,13 +91,14 @@ namespace NitroRhythm.UI
             GameObject model = Resources.Load<GameObject>($"NitroRhythm/Models/{modelName}");
             if (model == null) return;
 
-            GameObject instance = Instantiate(model, parent);
+            GameObject instance = ModelSanitizer.Strip(Instantiate(model, parent));
             instance.name = modelName;
             instance.transform.localPosition = localPosition;
             instance.transform.localRotation = localRotation;
 
             ModelNormalizer normalizer = instance.AddComponent<ModelNormalizer>();
             normalizer.TargetSize = targetSize;
+            normalizer.InheritParentScale = true;   // kart and pilot scale together with the showcase
 
             Texture2D texture = useTexture ? VisualEntityFactory.LoadTexture(def.texture) : null;
             Material material = VisualEntityFactory.CreateModelMaterial(def.Color, texture);
@@ -108,8 +119,9 @@ namespace NitroRhythm.UI
         public void SetSelected(bool selected)
         {
             IsSelected = selected;
-            _scaleTarget = selected ? 1.12f : 0.94f;
-            _spin = selected ? 55f : 28f;
+            _scaleTarget = selected ? 1.0f : 0.88f;
+            _swayAmplitude = selected ? 16f : 10f;
+            _swaySpeed = selected ? 1.1f : 0.7f;
 
             if (_ring != null)
             {
@@ -125,10 +137,12 @@ namespace NitroRhythm.UI
         {
             if (_pivot != null)
             {
-                _pivot.Rotate(Vector3.up, _spin * Time.unscaledDeltaTime, Space.Self);
+                _clock += Time.unscaledDeltaTime;
+                float yaw = BaseYaw + (Definition != null ? Definition.modelYawOffset : 0f) + Mathf.Sin(_clock * _swaySpeed + _phase) * _swayAmplitude;
+                _pivot.localRotation = Quaternion.Euler(0f, yaw, 0f);
             }
 
-            transform.localScale = Vector3.Lerp(transform.localScale, Vector3.one * _scaleTarget, 1f - Mathf.Exp(-8f * Time.unscaledDeltaTime));
+            transform.localScale = Vector3.Lerp(transform.localScale, Vector3.one * (_scaleTarget * LayoutScale), 1f - Mathf.Exp(-8f * Time.unscaledDeltaTime));
         }
 
         internal void RaiseClicked() => Clicked?.Invoke(this);
