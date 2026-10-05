@@ -20,16 +20,17 @@ cerrar las cuatro evidencias.
 - [x] **Ronda 2**: mundo temático (7 dominios), una pantalla por nivel, villano que ataca, interfaz nueva, modelos propios, música y ambiente por dominio (`GA5-AA3-EV01_Registro_Cambios_Ronda2.md`).
 - [x] **Build WebGL** + `.zip` para compartir.
 - [x] **Capturas** del estado final en `Evidencias/Despues`.
-- [x] **Documentos**: cuestionario AA1, informe AA2 (con analítica), registro AA3, infografía AA4, guía de 5 usuarios.
-- [x] **Analítica**: 3 usuarios simulados + 2 reales pendientes (`Analitica/`).
+- [x] **Documentos**: cuestionario AA1, informe AA2 (**con gráficos incrustados**), registro AA3 (rondas 1–3), infografía AA4, guía de 5 usuarios.
+- [x] **Analítica**: 5 usuarios de ejemplo (promedio 4.22/5) + reporte estilo Google Forms (`Docs/Forms_Google/`).
+- [x] **Infografía** en PPTX para importar a Canva (`GA5-AA4-EV01_Infografia.pptx`) y PDF.
+- [x] **Carpetas de entrega** en `SENA/NitroRythm/Entregas/GA5-AA3-EV01/` y `GA5-AA4-EV01/`.
 
 ### Pendiente (acciones de la aprendiza)
-- [ ] Publicar el prototipo y **aplicar el cuestionario a los 5 usuarios** (2 reales).
-- [ ] Completar la fila de los 2 usuarios reales en `Analitica/respuestas.csv` y regenerar gráficos.
-- [ ] Montar la **infografía comparativa** en Canva y exportar a PDF.
-- [x] Ajustes según hallazgos **P4** (HUD), **P6** (feedback de impacto) y **P9** (progresión y checkpoints): ver `GA5-AA3-EV01_Registro_Cambios.md`.
-- [x] Capturas **"Antes"** (HUD, selección y piloto) y **"Después"** generadas desde el juego real.
-- [ ] Subir los cambios al repositorio (`git commit` + `git push`) para que los enlaces de `ENLACES_EVIDENCIAS.md` funcionen.
+- [ ] Reemplazar los 5 registros de ejemplo en `Docs/Analitica/respuestas.csv` por las respuestas reales y volver a ejecutar `Docs/Tools/docs/generate_analytics.py`.
+- [ ] Crear el formulario en Google Forms con `Docs/Forms_Google/PREGUNTAS_FORMULARIO.md` y pegar el enlace en `ENLACE_FORMULARIO.txt`.
+- [ ] Subir el `.pptx` de la infografía a **Canva** (importar PPTX), exportar y compartir el enlace.
+- [ ] Generar el **ZIP** de las carpetas de `SENA/NitroRythm/Entregas/`.
+- [ ] Publicar la build y aplicar el cuestionario a los 5 usuarios.
 
 ---
 

@@ -176,6 +176,8 @@ Toda la documentación del proyecto está dentro de este repositorio, en la carp
 - 🧾 **[Créditos y licencias](Docs/CREDITOS_Y_LICENCIAS.md)** (fuentes OFL, HDRIs CC0, iconos Apache 2.0).
 - 🧊 **[Paquete de referencia para Hunyuan3D](Docs/Hunyuan/PROMPTS_HUNYUAN.md)** (vistas y prompts de los personajes).
 - 📈 **[Analítica](Docs/Analitica/)** (respuestas CSV, gráficos y resumen).
+- 📝 **[Preguntas para Google Forms](Docs/Forms_Google/PREGUNTAS_FORMULARIO.md)**.
+- 🖼️ **[Infografía (PPTX para Canva)](Docs/Evidencias/GA5-AA4-EV01_Infografia.pptx)**.
 - 📸 **[Capturas](Docs/Capturas/Despues/)** del prototipo final.
 - 🧰 **[Scripts de herramientas](Docs/Tools/)** (Blender y documentos).
 

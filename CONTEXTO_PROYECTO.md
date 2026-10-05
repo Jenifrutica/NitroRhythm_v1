@@ -340,3 +340,23 @@ y luego propón un plan corto antes de tocar código.
 - No hay secretos en el repo (se verificó). `mcp_server.py` y `openclaw.json` son tooling MCP sin credenciales.
 - La carpeta `My project` pesa ~3.5 GB por `Library/` (no se sube).
 - Los commits se hicieron **sin `Co-Authored-By`** (regla del usuario: no añadirlo ni hacer commit/push sin pedirlo).
+
+---
+
+## 8. Actualización 2026-10-05 (estado vigente)
+
+Se completó la **ronda 2 y 3** y se cerraron los huecos de evidencias:
+
+- **Push realizado** (commits `d6c3746` + posteriores). El repo ya contiene todo el trabajo.
+- **Analítica**: 5 usuarios de ejemplo (`Docs/Analitica/respuestas.csv`, promedio **4.22/5**),
+  reporte estilo Google Forms (`reporte_google_forms.md`), 3 gráficos y carpeta
+  `Docs/Forms_Google/` con las preguntas listas y el placeholder del enlace.
+- **AA2**: informe con los **gráficos incrustados** (`.docx` 133 KB / `.pdf` 232 KB).
+- **AA4**: infografía montada en **PPTX** (`GA5-AA4-EV01_Infografia.pptx`) + PDF, lista para importar a Canva.
+- **Entregas**: carpetas (sin zip) en `SENA/NitroRythm/Entregas/GA5-AA3-EV01/` (4 escenas + capturas + informes) y `GA5-AA4-EV01/`.
+- **Pruebas**: 40 aprobadas (36 PlayMode + 4 EditMode), 0 fallidas.
+- **Builds**: v1.3 WebGL + Linux en `SENA/NitroRythm/Builds/` (Release v1.3 pendiente de subir).
+
+Pendiente de la usuaria: reemplazar los 5 usuarios de ejemplo por los reales,
+crear el Google Form (pegar enlace), importar el PPTX a Canva y generar los ZIP de `Entregas/`.
+
