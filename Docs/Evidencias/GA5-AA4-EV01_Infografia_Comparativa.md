@@ -8,6 +8,12 @@
 > incluye la descripción *Antes* y *Después* y la imagen exacta a usar, tomada de
 > `Docs/Capturas/Antes` y `Docs/Capturas/Despues` del repositorio.
 
+> **Nota sobre el "antes":** como no se conservaron capturas del prototipo
+> original, el estado *antes* se **reconstruye** con una captura simulada del
+> primer prototipo (primitivas y HUD en texto plano), en
+> `Docs/Capturas/Antes/legacy/`. El estado *después* son capturas reales de la
+> versión final.
+
 ---
 
 ## Encabezado
@@ -146,15 +152,9 @@ tinte, había unos 121 checkpoints, el villano no atacaba y la interfaz era muy 
 1. Cree un diseño de infografía vertical (1080 × 2400 px).
 2. Copie cada sección y coloque las imágenes Antes / Después en paralelo. Las
    imágenes (formato PNG) están en `Docs/Capturas/Antes/` y `Docs/Capturas/Despues/`:
-   - HUD: `Antes/03_Gameplay_HUD_original.png` ↔ `Despues/gameplay/gameplay_impacto_checkpoint_turbo.png`
-   - Personajes: `Antes/02_CharacterSelect_original.png` ↔ `Despues/gameplay/seleccion_personajes.png`
-   - Piloto de Lyra: `Antes/piloto/lyra_lado.png` ↔ `Despues/piloto/lyra_kart_lado.png`
-   - Piloto de Karel: `Antes/piloto/karel_lado.png` ↔ `Despues/piloto/karel_kart_lado.png`
-   - Pista y checkpoints: `Despues/gameplay/gameplay_conduciendo.png`
-   - Resultados: `Despues/gameplay/resultados_con_tiempo.png`
-   - Ronda 2 (interfaz): `Antes/ronda2/seleccion_al_reves_reporte.png` ↔ `Despues/ronda2/ui/ui_seleccion.png`
-   - Ronda 2 (HUD): `Antes/ronda2/hud_basico_y_bot_cubo.png` ↔ `Despues/ronda2/ui/ui_hud_dominio5.png`
-   - Ronda 2 (niveles): `Antes/ronda2/gameplay_cubos_y_un_solo_estilo.png` ↔ `Despues/ronda2/RESUMEN_dominios.png`
-   - Ronda 2 (combate): `Despues/ronda2/villano/villano_ataque.png`
+   - Estructura e interfaces: `Antes/legacy/legacy_menu.png` ↔ `Despues/ronda2/ui/ui_menu_principal.png`
+   - Concepto gráfico: `Antes/legacy/legacy_select.png` ↔ `Despues/ronda3/seleccion_personajes.png`
+   - Niveles: `Antes/legacy/legacy_track.png` ↔ `Despues/ronda2/RESUMEN_dominios.png`
+   - Mecánicas: `Antes/legacy/legacy_gameplay.png` ↔ `Despues/ronda3/gameplay_ko_cuenta_regresiva.png`
 3. Use los colores del juego: cian `#33CCFF`, dorado `#FBBF24`, rojo `#FF0000`.
 4. Exporte a **PDF** y comparta el enlace.

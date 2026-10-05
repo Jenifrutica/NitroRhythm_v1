@@ -99,39 +99,41 @@ text(slide, 0.4, 1.6, 6.7, 0.4,
 y = 2.2
 y = section(
     "1 · Estructura e interfaces",
-    "Una sola escena de prueba con menú y HUD por código (OnGUI), sin navegación.",
+    "Prototipo inicial: una sola escena con menú y HUD en texto plano, sin navegación.",
     "Cuatro escenas (menú, selección, gameplay, resultados) en Canvas + TextMeshPro, con HUD ampliado.",
-    os.path.join(CAP, "Antes/03_Gameplay_HUD_original.png"),
-    os.path.join(CAP, "Despues/gameplay/gameplay_impacto_checkpoint_turbo.png"),
+    os.path.join(CAP, "Antes/legacy/legacy_menu.png"),
+    os.path.join(CAP, "Despues/ronda2/ui/ui_menu_principal.png"),
     y)
 
 y = section(
     "2 · Concepto gráfico",
-    "Primitivas cúbicas de color plano; sin audio reactivo.",
-    "Karts y pilotos 3D texturizados, estética neón URP y música/SFX sintetizados.",
-    os.path.join(CAP, "Antes/02_CharacterSelect_original.png"),
-    os.path.join(CAP, "Despues/gameplay/seleccion_personajes.png"),
+    "Primitivas cúbicas de color plano; sin garaje 3D ni audio reactivo.",
+    "Karts y pilotos 3D texturizados, garaje 3D y estética neón URP.",
+    os.path.join(CAP, "Antes/legacy/legacy_select.png"),
+    os.path.join(CAP, "Despues/ronda3/seleccion_personajes.png"),
     y)
 
 y = section(
     "3 · Niveles",
-    "Pista procedural lineal sin temática ni narrativa.",
+    "Pista de un solo estilo: plataformas grises de cubos, sin temática.",
     "7 dominios jugables con cielo, props, partículas y música propios; checkpoints visibles.",
-    os.path.join(CAP, "Antes/ronda2/gameplay_cubos_y_un_solo_estilo.png"),
+    os.path.join(CAP, "Antes/legacy/legacy_track.png"),
     os.path.join(CAP, "Despues/ronda2/RESUMEN_dominios.png"),
     y)
 
 y = section(
     "4 · Mecánicas",
-    "Movimiento básico y villano estático.",
-    "4 modos, villano que ataca al compás, K.O. con cuenta regresiva, bot que salta huecos y feedback de impacto.",
-    os.path.join(CAP, "Despues/ronda2/villano/villano_ataque.png"),
+    "Karts y villano de cubos; movimiento básico y sin combate.",
+    "4 modos, villano que ataca al compás y K.O. con cuenta regresiva y feedback de impacto.",
+    os.path.join(CAP, "Antes/legacy/legacy_gameplay.png"),
     os.path.join(CAP, "Despues/ronda3/gameplay_ko_cuenta_regresiva.png"),
     y)
 
-text(slide, 0.4, y + 0.1, 6.7, 1.0,
+text(slide, 0.4, y + 0.1, 6.7, 1.2,
      [("Hallazgos P4 (HUD), P6 (impacto) y P9 (progresión) atendidos y verificados con 40 pruebas automáticas.",
        WHITE, False, 12),
+      ("El estado «antes» se reconstruye a partir del prototipo inicial (primitivas, sin garaje 3D).",
+       GREY, False, 10),
       ("Colores del juego: cian #33CCFF · dorado #FBBF24 · rojo #FF0000", GREY, False, 10)],
      align=PP_ALIGN.CENTER)
 

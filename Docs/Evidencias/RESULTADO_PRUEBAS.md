@@ -1,6 +1,6 @@
 # Resultado de las pruebas automáticas — NitroRhythm
 
-Generado: 2026-10-04 · Unity 6000.5.8f1 · Unity Test Framework 1.7.0
+Generado: 2026-10-05 · Unity 6000.5.8f1 · Unity Test Framework 1.7.0
 
 > Archivo generado por `Docs/Tools/docs/summarize_tests.py` a partir de
 > `Logs/test_results_*.xml`. Las pruebas "Omitida" son generadores de capturas que
