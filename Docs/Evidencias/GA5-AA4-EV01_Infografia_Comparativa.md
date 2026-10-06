@@ -4,6 +4,8 @@
 **Producto:** Infografía comparativa (plantilla gratuita) + PDF
 **Programa:** Tecnología en Desarrollo de Videojuegos y Entornos Interactivos — SENA
 
+**Enlace de la infografía en Canva:** https://canva.link/j1aecdvqxvhjluh
+
 > Contenido listo para montar en **Canva** (plantilla gratuita). Cada sección
 > incluye la descripción *Antes* y *Después* y la imagen exacta a usar, tomada de
 > `Docs/Capturas/Antes` y `Docs/Capturas/Despues` del repositorio.

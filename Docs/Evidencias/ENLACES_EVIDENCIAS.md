@@ -52,10 +52,14 @@ Prefijo común: `https://github.com/Jenifrutica/NitroRhythm_v1/blob/main/`
 
 ## AA4-EV01 — Infografía comparativa
 
-| Qué entregar | Enlace |
+**Enlace de Canva (para compartir):** https://canva.link/j1aecdvqxvhjluh
+(https://www.canva.com/design/DAHXMBj4sf4/uyvdijfjtOq7j9AJvVlVkw/edit)
+
+| Qué entregar | Enlace / archivo |
 | :-- | :-- |
-| **Infografía (PPTX para importar en Canva)** | `.../Docs/Evidencias/GA5-AA4-EV01_Infografia.pptx` |
-| Infografía (PDF) | `.../Docs/Evidencias/GA5-AA4-EV01_Infografia.pdf` |
+| **Infografía en Canva (enlace para compartir)** | https://canva.link/j1aecdvqxvhjluh |
+| Infografía exportada (PDF) | `SENA/NitroRythm/Entregas/GA5-AA4-EV01/GA5-AA4-EV01_Infografia_Canva.pdf` |
+| Documento editable en negro (DOCX) | `.../Docs/Evidencias/GA5-AA4-EV01_Infografia_Comparativa.docx` |
 | Contenido comparativo (PDF) | `.../Docs/Evidencias/GA5-AA4-EV01_Infografia_Comparativa.pdf` |
 | **Carpeta de entrega** | `SENA/NitroRythm/Entregas/GA5-AA4-EV01/` |
 
