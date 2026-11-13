@@ -1,0 +1,77 @@
+# PENDING.md — Pendientes, bugs y backlog
+
+Estado a 2026-11-13. El proyecto está **jugable y con la evidencia cerrada**; esto
+es lo que queda para una versión de producción.
+
+---
+
+## 1. Bugs / limitaciones conocidas
+
+| # | Severidad | Descripción | Dónde | Nota |
+| :-- | :-- | :-- | :-- | :-- |
+| 1 | Media | **Release WebGL no determinista**: dos builds del mismo código pueden diferir; una puede no dibujar 3D. | Build | Probar siempre la build release en navegador (`webgl_play.js`). |
+| 2 | Media | **Pilotos sin animación** (mallas estáticas). | `CharacterDisplay`, gameplay | No hay `Animator`/clips. |
+| 3 | Baja | **Selector de audio externo ausente**: solo `GameSession.AudioTrackPath` (ruta/URL). | `AudioReactiveMusicController` | En WebGL solo URL. |
+| 4 | Baja | `SampleScene.unity` legacy. | `Assets/Scenes` | Se puede eliminar. |
+| 5 | Baja | Código muerto: `GameModeManager` (solo por el enum `GameMode`), `ObstacleLauncher` (no enganchado). | `Core`, `Combat` | Limpiar o documentar. |
+| 6 | Baja | El estado “antes” de las capturas es **simulado** (proto de cubos). | `Docs/Capturas/Antes/legacy` | No había capturas del original. |
+| 7 | Baja | Respuestas del Forms son **simuladas** (enviadas por script). | `Docs/Analitica` | Si se quieren reales: limpiar respuestas y repetir. |
+| 8 | Baja | `pilotOffset` por personaje es empírico. | `prototype_data.json` | Ajustar si cambian los modelos. |
+
+---
+
+## 2. Backlog técnico (priorizado)
+
+### Alta
+1. **Animación de pilotos/karts** (idle, giro, salto) con Animator o Tweens.
+2. **UI de selección de música**: cargar archivo/URL y pre-analizar antes de correr.
+3. **Determinismo del build WebGL**: fijar pipeline de build reproducible y smoke test
+   automático en CI antes de publicar.
+
+### Media
+4. **Selector de personaje/kart con estadísticas reales** (afectan manejo).
+5. **Tabla de tiempos/puntuación** y guardado local (save system).
+6. **Accesibilidad**: remapeo de teclas, escala de UI, daltonismo.
+7. **Audio**: mezcla por buses (música/SFX/ambiente) y opción de mute.
+8. **Limpiar código muerto** y `SampleScene`.
+9. **Localización** (ES/EN) para textos de UI y narrativa.
+
+### Baja
+10. **Mobile/touch** (joystick virtual, botones).
+11. **Multijugador online** (hoy solo local).
+12. **Más dominios** y cinemáticas 3D de intro/encrucijada/final.
+13. **VFX** con Visual Effect Graph.
+14. **CI** (GitHub Actions) con tests y build.
+
+---
+
+## 3. Evidencias (SENA) — lo que queda operativo
+
+- **AA1**: subir `Entregas/GA5-AA1-EV01/` (cuestionario + analítica).
+- **AA2**: subir `Entregas/GA5-AA2-EV01/` (informe).
+- **AA3**: comprimir `Entregas/GA5-AA3-EV01/` y subir.
+- **AA4**: pegar el enlace de Canva (`https://canva.link/j1aecdvqxvhjluh`) y subir el PDF.
+
+ZIPs finales ya generados en `Downloads/Evidencias_GA5_NitroRhythm/`.
+
+---
+
+## 4. Deuda de documentación
+
+- `CONTEXTO_PROYECTO.md` queda como **histórico**; el documento vigente es
+  `AGENT_CONTEXT.md`.
+- `Docs/PENDIENTE_PROXIMA_SESION.md` está **obsoleto** (describía un bloqueo ya
+  resuelto); se conserva solo como registro. No usarlo como estado actual.
+- Regenerar `.docx/.pdf` si se editan los `.md`.
+
+---
+
+## 5. Criterios de “listo para producción”
+
+- [ ] 60 FPS estables en el hardware objetivo (medido con Profiler).
+- [ ] Build WebGL determinista y verificada en 3 navegadores.
+- [ ] Sin código muerto ni `SampleScene`.
+- [ ] Save system y tabla de tiempos.
+- [ ] Accesibilidad básica (remapeo, escala, contraste).
+- [ ] Localización ES/EN.
+- [ ] Pruebas estables repetidas 3 veces.

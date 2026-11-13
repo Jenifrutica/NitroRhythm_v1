@@ -11,6 +11,21 @@ Prototipo funcional desarrollado en **Unity 6 (URP)** como evidencia del program
 
 ---
 
+## 🧭 Para agentes y desarrolladores
+
+Si llegas nuevo al proyecto, empieza por estos documentos:
+
+| Documento | Contenido |
+| :-- | :-- |
+| **[`AGENT_CONTEXT.md`](AGENT_CONTEXT.md)** | Handoff autoritativo: estado, rutas, arquitectura, trampas, pendientes. |
+| [`Docs/ARCHITECTURE.md`](Docs/ARCHITECTURE.md) | Arquitectura técnica detallada. |
+| [`Docs/RUNBOOK.md`](Docs/RUNBOOK.md) | Comandos de pruebas, builds, capturas y herramientas. |
+| [`Docs/PENDING.md`](Docs/PENDING.md) | Bugs, limitaciones y backlog. |
+| [`Docs/CHANGELOG.md`](Docs/CHANGELOG.md) | Historial de rondas. |
+| [`Docs/EVIDENCIAS.md`](Docs/EVIDENCIAS.md) | Mapa de las 4 evidencias y entregables. |
+
+---
+
 ## 🎮 ¿De qué trata?
 
 Dos héroes (**Lyra Pulse** y **Karel Volt**) persiguen al villano **Vox Null** a

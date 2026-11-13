@@ -1,31 +1,55 @@
 # Documentación — NitroRhythm
 
-Índice de toda la documentación del proyecto, lista para compartir.
+Índice de toda la documentación del proyecto.
 
-## Contenido
+## Empezar aquí
 
-| Carpeta / archivo | Descripción |
+| Documento | Para qué |
 | :-- | :-- |
-| `Evidencias/GA5-AA1-EV01_Cuestionario.*` | Cuestionario de la prueba de funcionalidad (10 preguntas, escala 1–5). |
-| `Evidencias/Guia_5_Usuarios.*` | Guía para publicar el prototipo y aplicarlo a 5 usuarios. |
-| `Evidencias/GA5-AA2-EV01_Informe_Hallazgos.*` | Informe de hallazgos con la analítica y conclusiones. |
-| `Evidencias/GA5-AA3-EV01_Registro_Cambios.*` | Registro ordenado de ajustes + capturas antes/después. |
-| `Evidencias/GA5-AA4-EV01_Infografia_Comparativa.*` | Contenido de la infografía comparativa (para Canva). |
-| `Evidencias/PLAN_EJECUCION.*` | Plan maestro: hecho, pendiente y paso a paso. |
-| `Evidencias/ENLACES_EVIDENCIAS.md` | Enlaces exactos de cada evidencia para entregar. |
-| `Evidencias/RESULTADO_PRUEBAS.md` | Resultado de las pruebas automáticas (40 aprobadas). |
-| `Evidencias/GA5-AA3-EV01_Registro_Cambios_Ronda2.*` | Registro de la ronda 2 de ajustes. |
-| `CREDITOS_Y_LICENCIAS.md` | Créditos y licencias de los assets libres y propios. |
-| `Hunyuan/` | Vistas de referencia y prompts de los personajes para Hunyuan3D. |
-| `Evidencias/README.md` | Índice de evidencias GA5. |
-| `Analitica/` | `respuestas.csv`, gráficos PNG y resumen de resultados. |
-| `Capturas/Despues/` | Capturas del prototipo final (menú, selección, gameplay con HUD ampliado, resultados, pilotos). |
-| `Capturas/Antes/` | Capturas del estado inicial (HUD, selección de personajes y pilotos). |
-| `Tools/blender/` | Scripts de Blender (`generate_karts.py`, `preview_model.py`, `inspect_model.py`). |
-| `Tools/docs/` | Generación de analítica y conversión Markdown → DOCX/PDF. |
+| [`../AGENT_CONTEXT.md`](../AGENT_CONTEXT.md) | **Handoff autoritativo** para una persona/agente nueva: estado, rutas, arquitectura, trampas, pendientes. |
+| [`ARCHITECTURE.md`](ARCHITECTURE.md) | Arquitectura técnica detallada (scripts, flujo, datos, UI, mundo, pruebas). |
+| [`RUNBOOK.md`](RUNBOOK.md) | Comandos exactos: pruebas, builds, capturas, Blender, analítica, docs. |
+| [`PENDING.md`](PENDING.md) | Bugs, limitaciones y backlog priorizado. |
+| [`CHANGELOG.md`](CHANGELOG.md) | Historial de rondas 1–4. |
+| [`EVIDENCIAS.md`](EVIDENCIAS.md) | Mapa de las 4 evidencias y entregables. |
+
+## Evidencias (GA5-220501087)
+
+| Archivo | Descripción |
+| :-- | :-- |
+| `Evidencias/GA5-AA1-EV01_Cuestionario.*` | Cuestionario (10 preguntas, escala 1–5). |
+| `Evidencias/Guia_5_Usuarios.*` | Guía para publicar el prototipo y aplicarlo. |
+| `Evidencias/GA5-AA2-EV01_Informe_Hallazgos.*` | Informe de hallazgos con analítica. |
+| `Evidencias/GA5-AA3-EV01_Registro_Cambios.*` | Registro ordenado de ajustes (ronda 1). |
+| `Evidencias/GA5-AA3-EV01_Registro_Cambios_Ronda2.*` | Ajustes ronda 2. |
+| `Evidencias/GA5-AA3-EV01_Registro_Cambios_Ronda3.*` | Ajustes ronda 3. |
+| `Evidencias/GA5-AA3-EV01_Registro_Cambios_Ronda4.*` | Ajustes ronda 4 (prueba con usuarios). |
+| `Evidencias/GA5-AA3-EV01_Justificacion_Controles.*` | Justificación de controles. |
+| `Evidencias/GA5-AA4-EV01_Infografia_Comparativa.*` | Contenido comparativo + DOCX fuente negra. |
+| `Evidencias/GA5-AA4-EV01_Infografia.pptx` / `.pdf` | Infografía para Canva. |
+| `Evidencias/ENLACES_EVIDENCIAS.md` | Enlaces exactos por evidencia. |
+| `Evidencias/RESULTADO_PRUEBAS.md` | Resultado de las pruebas automáticas. |
+| `Evidencias/PLAN_EJECUCION.md` | Plan de ejecución y estado. |
+| `Evidencias/GA5_EVIDENCIAS_Y_JUSTIFICACION.*` | Justificación de cumplimiento de las 4 evidencias. |
+| `Evidencias/README_ENTREGAS.txt` | Paso a paso por evidencia (entrega). |
+
+## Recursos
+
+| Carpeta | Descripción |
+| :-- | :-- |
+| `Analitica/` | `respuestas_raw.csv`, `respuestas.csv`, reporte Forms, 3 gráficos, resumen. |
+| `Forms_Google/` | Preguntas listas y enlace del formulario. |
+| `Capturas/Antes/` | Estado inicial (incluye `legacy/` simulado). |
+| `Capturas/Despues/` | Estado final (ronda 1/2/3). |
+| `Hunyuan/` | Vistas de referencia y prompts para Hunyuan3D. |
+| `Tools/blender/` | Scripts de Blender (generar, previsualizar, medir, props, HDRI). |
+| `Tools/docs/` | Analítica, md→docx, infografía, capturas WebGL, resumen de pruebas. |
+| `Tools/extract_unitypackage.py`, `skies_horizon.py` | Utilidades. |
+| `CREDITOS_Y_LICENCIAS.md` | Créditos y licencias de assets. |
 | `README_Prototipo.md` | Guía técnica del proyecto Unity. |
 
 ## Formatos
 
-Cada documento está en tres formatos: **`.md`** (editable), **`.docx`** (Word) y
-**`.pdf`** (entrega).
+Cada documento de evidencia está en **`.md`** (editable), **`.docx`** (Word) y
+**`.pdf`** (entrega). Si editas un `.md`, regenera con `Tools/docs/md_to_docx.py`
+y `soffice --convert-to pdf`.
