@@ -6,7 +6,8 @@
 >
 > Última revisión: 2026-11-13 · Estado: **ronda 4 cerrada, repo limpio y pusheado**.
 > Documentos de apoyo: `Docs/ARCHITECTURE.md`, `Docs/RUNBOOK.md`,
-> `Docs/PENDING.md`, `Docs/CHANGELOG.md`, `Docs/EVIDENCIAS.md`.
+> `Docs/PENDING.md`, `Docs/CHANGELOG.md`, `Docs/EVIDENCIAS.md`,
+> `Docs/TOOLS.md`, `Docs/ASSETS.md`.
 
 ---
 

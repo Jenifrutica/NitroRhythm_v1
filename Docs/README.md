@@ -12,6 +12,8 @@
 | [`PENDING.md`](PENDING.md) | Bugs, limitaciones y backlog priorizado. |
 | [`CHANGELOG.md`](CHANGELOG.md) | Historial de rondas 1–4. |
 | [`EVIDENCIAS.md`](EVIDENCIAS.md) | Mapa de las 4 evidencias y entregables. |
+| [`TOOLS.md`](TOOLS.md) | Herramientas de Editor, Blender, documentos y WebGL. |
+| [`ASSETS.md`](ASSETS.md) | Inventario de modelos, texturas, cielos, fuentes y materiales. |
 
 ## Evidencias (GA5-220501087)
 
