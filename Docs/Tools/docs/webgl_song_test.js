@@ -58,8 +58,8 @@ const { chromium } = require("playwright-core");
 
   await at(0, -475);                          // INICIAR CARRERA
   for (let k = 0; k < 4; k++) { await page.waitForTimeout(1200); await shot(`s6_intro_${k}`); }
-  await page.keyboard.press("Space");
-  await page.waitForTimeout(3000);
+  // Space closes the domain card and, on the first domain, the controls guide.
+  for (let k = 0; k < 3; k++) { await page.keyboard.press("Space"); await page.waitForTimeout(1500); }
   await page.keyboard.down("KeyW");
   for (const [i, t] of [[7, 4000], [8, 5000], [9, 5000]]) {
     await page.waitForTimeout(t);

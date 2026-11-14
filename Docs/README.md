@@ -14,6 +14,7 @@
 | [`EVIDENCIAS.md`](EVIDENCIAS.md) | Mapa de las 4 evidencias y entregables. |
 | [`TOOLS.md`](TOOLS.md) | Herramientas de Editor, Blender, documentos y WebGL. |
 | [`ASSETS.md`](ASSETS.md) | Inventario de modelos, texturas, cielos, fuentes y materiales. |
+| [`DEPLOY.md`](DEPLOY.md) | Builds de todas las plataformas y cómo publicarlas (web, GitHub, itch.io). |
 
 ## Evidencias (GA5-220501087)
 

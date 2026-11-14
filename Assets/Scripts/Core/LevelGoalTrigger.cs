@@ -121,6 +121,10 @@ namespace NitroRhythm.Core
 
             _insidePlayers.Add(kart);
             kart.ControlLocked = true;   // hold the kart on the goal platform while the others arrive
+
+            // The pilot cheers on the goal platform.
+            NitroRhythm.Player.KartAnimator animator = kart.GetComponent<NitroRhythm.Player.KartAnimator>();
+            if (animator != null && animator.Pilot != null) animator.Pilot.Celebrate(8f);
         }
 
         private void OnTriggerExit(Collider other)

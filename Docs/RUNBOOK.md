@@ -52,7 +52,7 @@ python3 "$PROJECT/Docs/Tools/docs/summarize_tests.py"
 # → Docs/Evidencias/RESULTADO_PRUEBAS.md
 ```
 
-Resultado esperado (2026-11-14): **69 PlayMode → 58 OK + 11 omitidas, 4 EditMode OK,
+Resultado esperado (2026-11-14, ronda 6): **75 PlayMode → 63 OK + 12 omitidas, 4 EditMode OK,
 0 fallos** (~2 min). Las omitidas son generadores de capturas. Si una corrida no termina,
 matar el `Editor/Unity -batchmode` por PID (ver §11).
 Si sale `exit 198` / `No valid Unity Editor license found`: iniciar sesión en Unity Hub.
@@ -90,6 +90,9 @@ Después del build:
 ```bash
 git -C "$PROJECT" checkout -- Assets/Scenes
 ```
+
+### Todas las plataformas
+Ver `Docs/DEPLOY.md` (`PrototypeSceneBuilder.BuildEverything`: Linux, Windows, macOS y WebGL).
 
 ### Linux
 ```bash
@@ -179,6 +182,18 @@ Generadores:
 ---
 
 ## 7. Modelos 3D (Blender)
+
+### Animaciones de los pilotos
+```bash
+flatpak run --command=blender org.blender.Blender --background \
+  --python "$PROJECT/Docs/Tools/blender/rig_models.py" -- \
+  "$PROJECT/Assets/Resources/NitroRhythm/Models" ~/SENA/NitroRythm/Tools/rig_out \
+  --preview ~/SENA/NitroRythm/Tools/rig_preview
+cp ~/SENA/NitroRythm/Tools/rig_out/Piloto_Neon_0*.fbx "$PROJECT/Assets/Resources/NitroRhythm/Models/"
+```
+El script borra los clips previos antes de crearlos (se puede ejecutar varias veces).
+Revisar las vistas previas antes de copiar. Los pilotos se importan como **Generic**.
+Los karts NO se reexportan (`--karts` solo para inspeccionar la detección de ruedas).
 
 ```bash
 flatpak run --command=blender org.blender.Blender --background \

@@ -96,6 +96,11 @@ fraccionarios, así la rejilla no se desfasa en canciones largas.
 `ProceduralTrackBuilder.Build(analysis, levelDef, startX)`:
 - Hasta 48 segmentos; si el tramo tiene más pulsos, cada segmento agrupa varios
   (máximo de graves/agudos del grupo) para que **todo** el tramo dé forma a la pista.
+- **Rejilla de pulsos**: 1 pulso = `cruiseSpeed (34 u/s) × segundos por pulso`. Cada segmento
+  (plataforma + hueco) ocupa exactamente sus pulsos: el borde del hueco coincide con un beat y
+  el nivel dura lo mismo que su música. `plan.beatXs` → `LevelManager.SpawnBeatLines` (líneas
+  `BeatLine`/`BeatLineBar` que pulsan con el bombo). `AudioReactiveMusicController.SyncToRaceStart`
+  reinicia la música en el pulso 0 cuando se cierra la tarjeta/guía.
 - `bass > 0.45` → hueco grande + jump pad/ramp.
 - `treble > 0.35/0.5/0.7` → spinner / moving hazard / barrier.
 - BPM → espaciado y `speedMultiplier`.
@@ -171,6 +176,15 @@ Los SFX y la música son **procedurales** para que funcionen en WebGL sin assets
   trompo en K.O., piloto que se inclina y mira hacia la curva y “respira” parado.
   Los modelos cuelgan de `AnimRig` (escala inversa del collider) → `AnimPivot`, para rotar sin
   cizalla; por eso las pruebas buscan `*_Visual`/`*_Pilot` en profundidad.
+- `PilotAnimator`: clips esqueléticos del piloto (FBX importado como **Generic**, cargados de
+  `Resources` con `LoadAll<AnimationClip>`), mezclados con Playables (`AnimationMixerPlayable`):
+  Idle, SteerLeft/Right, Boost, Celebrate, Hit, KO. Restaura cada frame las posiciones de reposo
+  de los huesos (los clips de Blender también hornean posiciones). Importarlo como **Legacy**
+  desplazaba al piloto del asiento: no hacerlo.
+- `KartWheelRig`: crea en tiempo de carga los huesos `Wheel_FL/FR/RL/RR` del kart (malla única,
+  `isReadable`) y la convierte en `SkinnedMeshRenderer`; `KartAnimator` gira las ruedas según la
+  velocidad y orienta las delanteras. **No reexportar los FBX de kart desde Blender**: el nodo
+  raíz cambia y el kart se desplaza respecto al piloto.
 - `CameraFollow`: mira 7 m por delante del kart (`LookAhead`) y abre el FOV con la velocidad
   y el turbo (`DynamicFov`).
 
@@ -211,7 +225,9 @@ Los SFX y la música son **procedurales** para que funcionen en WebGL sin assets
   vida P1/P2 (muestra “K.O. n” parpadeando), potenciadores, avisos, cuenta regresiva,
   progreso con checkpoints. En cooperativo P2 tiene su propio velocímetro (abajo a la derecha).
 - `LevelIntroCard`: con canción del jugador, el chip musical indica “Tramo n/7 de «…» · m:ss–m:ss”.
-- `ResultsScreen`: el subtítulo nombra la canción si se usó una.
+- `ResultsScreen`: el subtítulo nombra la canción si se usó una; el ganador celebra en el podio.
+- `LevelTransition`: animación 2D al superar un dominio (≈4,5 s, tiempo sin escalar), llamada
+  desde `CutsceneController.FinishEscape` antes de cargar el siguiente dominio o los resultados.
 - `LevelIntroCard`: tarjeta por dominio (se muestra al iniciar cada pantalla).
 - `ControlsGuide` / `ControlsOverlay`: guía por modo.
 - `PauseMenu`, `ResultsScreen` (rango S/A/B/C), `ScreenFader`, `UIAmbient`, `UIHoverEffect`.
@@ -255,7 +271,8 @@ Los SFX y la música son **procedurales** para que funcionen en WebGL sin assets
 | `CharacterDisplayAlignmentTests` | Pilotos centrados/sentados (3 personajes). |
 | `GameplayEvidenceCapture` / `LegacyEvidenceCapture` | Capturas (solo con `NITRO_SHOT_DIR`). |
 | `UserSongTests` | Análisis de muestras, mono, tramos (orden, solape, longitud), clip del tramo, controlador con canción, carga de WAV y MP3 reales. |
-| `AnimationAndAmbienceTests` | Rig sin cizalla, alabeo en curvas, aplastamiento al aterrizar, muros-ecualizador. |
+| `AnimationAndAmbienceTests` | Rig sin cizalla, alabeo en curvas, aplastamiento al aterrizar, muros-ecualizador, hover que respeta la selección. |
+| `Round6Tests` | Bordes de plataforma en pulsos, duración = música, 4 ruedas que giran, clips del piloto, transición 2D. |
 | `SceneSetupTests` (EditMode) | 4 escenas, Build Settings, JSON, modelos importados. |
 
 ---

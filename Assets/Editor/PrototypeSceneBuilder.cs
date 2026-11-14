@@ -249,6 +249,54 @@ namespace NitroRhythm.EditorTools
             Debug.Log($"[PrototypeSceneBuilder] Linux build finished at {outputDir}");
         }
 
+        [MenuItem("NitroRhythm/Build Windows")]
+        public static void BuildWindows()
+        {
+            BuildAll();
+            string outputDir = Path.Combine(Directory.GetCurrentDirectory(), "Builds", "Windows");
+            Directory.CreateDirectory(outputDir);
+            Report(BuildPipeline.BuildPlayer(new BuildPlayerOptions
+            {
+                scenes = SceneOrder,
+                locationPathName = Path.Combine(outputDir, "NitroRhythm.exe"),
+                target = BuildTarget.StandaloneWindows64,
+                options = BuildOptions.None
+            }), "Windows", outputDir);
+        }
+
+        /// <summary>macOS app (Intel + Apple Silicon). It is not signed: on a Mac, right-click → Abrir the first time.</summary>
+        [MenuItem("NitroRhythm/Build macOS")]
+        public static void BuildMac()
+        {
+            BuildAll();
+            string outputDir = Path.Combine(Directory.GetCurrentDirectory(), "Builds", "macOS");
+            Directory.CreateDirectory(outputDir);
+            Report(BuildPipeline.BuildPlayer(new BuildPlayerOptions
+            {
+                scenes = SceneOrder,
+                locationPathName = Path.Combine(outputDir, "NitroRhythm.app"),
+                target = BuildTarget.StandaloneOSX,
+                options = BuildOptions.None
+            }), "macOS", outputDir);
+        }
+
+        /// <summary>Linux + Windows + macOS + WebGL in one go (CLI: -executeMethod ...BuildEverything).</summary>
+        [MenuItem("NitroRhythm/Build Everything")]
+        public static void BuildEverything()
+        {
+            BuildLinux();
+            BuildWindows();
+            BuildMac();
+            BuildWebGL();
+        }
+
+        private static void Report(UnityEditor.Build.Reporting.BuildReport report, string platform, string outputDir)
+        {
+            UnityEditor.Build.Reporting.BuildSummary summary = report.summary;
+            Debug.Log($"[PrototypeSceneBuilder] {platform} build: {summary.result}, {summary.totalSize / (1024 * 1024)} MB, {summary.totalErrors} errors → {outputDir}");
+            if (summary.result != UnityEditor.Build.Reporting.BuildResult.Succeeded && Application.isBatchMode) EditorApplication.Exit(1);
+        }
+
         /// <summary>Development WebGL build with full stack traces (for diagnosing runtime errors in the browser).</summary>
         public static void BuildWebGLDebug()
         {

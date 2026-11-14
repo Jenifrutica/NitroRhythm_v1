@@ -150,8 +150,14 @@ namespace NitroRhythm.Narrative
             if (_levelManager != null && _levelManager.SingleLevelMode)
             {
                 GameSession session = GameSession.EnsureExists();
-                if (session.AdvanceLevel()) SceneFlow.LoadGameplay();
-                else SceneFlow.LoadResults();
+                int cleared = _pendingLevel;
+                // 2D "dominio superado" animation, then the next domain (or the results).
+                Time.timeScale = 0f;
+                NitroRhythm.UI.LevelTransition.Play(cleared, () =>
+                {
+                    if (session.AdvanceLevel()) SceneFlow.LoadGameplay();
+                    else SceneFlow.LoadResults();
+                });
                 return;
             }
 

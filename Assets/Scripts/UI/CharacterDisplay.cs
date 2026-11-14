@@ -30,6 +30,10 @@ namespace NitroRhythm.UI
         private float _phase;
         private float _scaleTarget = 1f;
         private float _hop;
+        private NitroRhythm.Player.PilotAnimator _pilotAnim;
+
+        /// <summary>The pilot's skeletal animation (null if the model has no clips).</summary>
+        public NitroRhythm.Player.PilotAnimator Pilot => _pilotAnim;
         private SlowBob _bob;
 
         /// <summary>Size factor set by the screen layout so the kart matches its card at any window shape.</summary>
@@ -70,6 +74,8 @@ namespace NitroRhythm.UI
             SpawnModel(def, def.kartModel, _pivot, Vector3.zero, Quaternion.Euler(0f, 180f, 0f), 3.8f, true);
             // Pilot FBX faces +Z (like the kart nose); the kart is turned 180 deg, so the pilot must be too.
             SpawnModel(def, def.pilotModel, _pivot, def.pilotOffset, Quaternion.Euler(0f, 180f, 0f), 1.9f * Mathf.Max(0.2f, def.pilotScale), false);
+            Transform pilot = _pivot.Find(def.pilotModel);
+            _pilotAnim = pilot != null ? NitroRhythm.Player.PilotAnimator.Attach(pilot, def.pilotModel) : null;
 
             _rim = StageFactory.AddRimLight(transform, new Vector3(0f, 3.2f, -0.4f), _accent, 2.4f, 9f);
             StageFactory.AddRimLight(transform, new Vector3(-1.6f, 1.2f, 1.6f), Color.white, 0.5f, 6f);
@@ -120,7 +126,11 @@ namespace NitroRhythm.UI
 
         public void SetSelected(bool selected)
         {
-            if (selected && !IsSelected && _pivot != null) _hop = 1f;   // celebrate the pick: hop + spin
+            if (selected && !IsSelected && _pivot != null)
+            {
+                _hop = 1f;   // celebrate the pick: hop + spin, and the pilot cheers
+                if (_pilotAnim != null) _pilotAnim.Celebrate(1.8f);
+            }
             IsSelected = selected;
             _scaleTarget = selected ? 1.0f : 0.88f;
             _swayAmplitude = selected ? 16f : 10f;

@@ -17,7 +17,8 @@
   generadas a partir de música, persecución Héroes vs Villano y multijugador local
   de 1–3 jugadores. Evidencia SENA **GA5-220501087**.
 - **Estado:** jugable, 4 escenas, 7 dominios, build WebGL/Linux, **canciones locales del
-  jugador** (ronda 5). Pruebas: 69 PlayMode (58 OK, 11 omitidas) + 4 EditMode OK, 0 fallos (2026-11-14).
+  jugador**, pista al compás, pilotos con huesos y animaciones, transición 2D y ejecutables
+  Linux/Windows/macOS/Web (ronda 6). Pruebas: 75 PlayMode (63 OK, 12 omitidas) + 4 EditMode OK, 0 fallos (2026-11-14).
 - **Repo:** https://github.com/Jenifrutica/NitroRhythm_v1 (público) · `main` limpio.
 - **Release:** https://github.com/Jenifrutica/NitroRhythm_v1/releases/tag/v1.3
 - **No hay nada pendiente de commit.** `git status` vacío.
@@ -105,7 +106,10 @@ Assets/Tests/    10 archivos de prueba (PlayMode + EditMode)
 | `Audio/SongLoader.cs` | Carga la canción: WebGL vía `Assets/Plugins/WebGL/NitroSongPicker.jslib` (selector del navegador + WebAudio); escritorio vía `UnityWebRequestMultimedia`. |
 | `UI/SongPickerPanel.cs` | Panel “TU CANCIÓN” (selección de piloto): selector web o explorador de archivos propio. |
 | `Player/KartAnimator.cs` | Animación procedural de kart/piloto bajo `AnimRig/AnimPivot` (no buscar los modelos como hijos directos). |
-| `World/MusicVisualizer.cs` | Muros-ecualizador + luz/bloom/bordes que laten con la música. |
+| `World/MusicVisualizer.cs` | Muros-ecualizador + luz/bloom/bordes/líneas de pulso que laten con la música. |
+| `Player/PilotAnimator.cs` | Clips esqueléticos del piloto con Playables (FBX **Generic**; Legacy desplaza al piloto). |
+| `Player/KartWheelRig.cs` | Huesos de rueda creados al cargar el kart (no reexportar los FBX de kart). |
+| `UI/LevelTransition.cs` | Animación 2D “¡DOMINIO SUPERADO!” + mapa de dominios entre niveles. |
 
 ---
 
@@ -178,8 +182,8 @@ Carga: `Resources.Load<TextAsset>("NitroRhythm/prototype_data")` → `PrototypeD
 
 ## 6. Pruebas y verificación
 
-- **Última ejecución completa (2026-11-14)**: PlayMode 69 casos → **58 OK, 0 fallos,
-  11 omitidos** (generadores de capturas que solo corren con `NITRO_SHOT_DIR`);
+- **Última ejecución completa (2026-11-14, ronda 6)**: PlayMode 75 casos → **63 OK, 0 fallos,
+  12 omitidos** (generadores de capturas que solo corren con `NITRO_SHOT_DIR`);
   **EditMode** 4 OK. Detalle: `Docs/Evidencias/RESULTADO_PRUEBAS.md`.
 - La batería completa tarda ~2 min. Las pruebas que cargan `02_Gameplay` con
   `BeginRun()` deben poner `ControlsGuideShown = true`: la guía del primer nivel pausa
@@ -214,6 +218,8 @@ found`, exit 198): abrir **Unity Hub** y volver a iniciar sesión. Pasó el 2026
 ### Escenas y build
 - Las 4 escenas se generan con **NitroRhythm ▸ Build Prototype Scenes**
   (`Assets/Editor/PrototypeSceneBuilder.cs`), que también crea los materiales base.
+- **Todas las plataformas**: `PrototypeSceneBuilder.BuildEverything` (Linux, Windows, macOS,
+  WebGL); publicación en `Docs/DEPLOY.md`.
 - Build: **NitroRhythm ▸ Build WebGL** (Brotli + Decompression Fallback) →
   `Builds/WebGL`; **NitroRhythm ▸ Build Linux** → `Builds/Linux/NitroRhythm.x86_64`;
   `PrototypeSceneBuilder.BuildWebGLDebug` (solo `-executeMethod`) → `Builds/WebGLDebug`.
@@ -225,9 +231,11 @@ found`, exit 198): abrir **Unity Hub** y volver a iniciar sesión. Pasó el 2026
   entregar (`Docs/Tools/docs/webgl_play.js`; requiere `playwright-core`, ver RUNBOOK §5).
 - Servir con `python3 -m http.server 8080`; nunca abrir `index.html` con `file://`.
 - Si el 3D no se dibuja y la consola muestra `Mismatch between texture format and
-  sampler type`: `Assets/Settings/Mobile_RPAsset.asset` (el pipeline de WebGL) debe tener
-  **sombras de luz principal y light cookies desactivadas** (corregido el 2026-11-14; era la
-  causa de la build “no determinista”). Revisar también `ModelSanitizer` (debe **desactivar**,
+  sampler type`: las sombras deben estar desactivadas en **los dos** assets de URP
+  (`Assets/Settings/PC_RPAsset.asset` y `Mobile_RPAsset.asset`). Si alguno las admite, el
+  *stripping* deja variantes de Lit con `sampler2DShadow` y WebGL puede elegir una sin textura de
+  comparación → no se dibuja nada Lit. Era la causa de la build “no determinista”; se diagnostica
+  con un `drawElements` instrumentado (ver CHANGELOG ronda 6). Revisar también `ModelSanitizer` (debe **desactivar**,
   no destruir, cámaras/luces de FBX) y los materiales base.
 
 ### Capturas de evidencia

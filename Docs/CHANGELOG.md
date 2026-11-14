@@ -2,6 +2,30 @@
 
 Historial de rondas de desarrollo. Fechas del entorno de trabajo.
 
+## Ronda 6 — Pista al compás, huesos y animaciones, transición 2D y todas las plataformas (2026-11-14)
+
+- **Pista al compás**: cada pulso mide lo que el kart recorre a velocidad crucero (34 u/s);
+  plataformas y huecos encajan en la rejilla de pulsos, así cada salto/obstáculo llega en un
+  beat y el nivel dura lo mismo que su tramo de canción. Líneas de pulso en la pista (más
+  anchas en el primer tiempo de cada compás) que destellan con el bombo. La música se reinicia
+  en el pulso 0 cuando arranca la carrera (tras la tarjeta/guía).
+- **Huesos y animaciones**: los pilotos (ya traían esqueleto humanoide) tienen clips Idle,
+  SteerLeft/Right, Boost, Celebrate, Hit y KO creados con `Docs/Tools/blender/rig_models.py`;
+  se mezclan con Playables (`PilotAnimator`). Los karts reciben huesos de rueda al cargar
+  (`KartWheelRig`): ruedas que giran con la velocidad y delanteras que se orientan en la curva.
+  El piloto celebra en la meta, en el podio y al elegirlo en el garaje.
+- **Transición 2D entre dominios** (`LevelTransition`): barrido de paneles, “¡DOMINIO
+  SUPERADO!”, conteo de tiempo y puntos, mapa de los 7 dominios con el kart saltando al
+  siguiente y tarjeta del próximo dominio (con su tramo de canción).
+- **Ejecutables**: Linux, Windows y macOS además de WebGL (`BuildEverything`); módulos de
+  Windows/macOS instalados en el editor. Guía de publicación en `Docs/DEPLOY.md`.
+- **WebGL, causa real del “sin 3D”**: instrumentando `drawElements` en el navegador se vio que
+  el shader Lit usado traía `sampler2DShadow` (variantes con sombras que sobrevivían por
+  `PC_RPAsset`) enlazados a texturas sin comparación. Sombras desactivadas en ambos assets de
+  URP; la build web verificada sin un solo error de GL.
+- **Pruebas**: 75 PlayMode (63 OK, 12 omitidas) + 4 EditMode, 0 fallos. Nuevo generador de
+  capturas `CaptureRound6AnimationAndTransition`.
+
 ## Ronda 5 — Tu canción, animación y ambientación (2026-11-13)
 
 - **Canciones locales**: botón “TU CANCIÓN” en la selección. Web: selector del navegador

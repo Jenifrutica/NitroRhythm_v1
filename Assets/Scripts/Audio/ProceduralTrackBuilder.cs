@@ -33,6 +33,11 @@ namespace NitroRhythm.Audio
 
             plan.trackHalfWidth = width * 0.5f;
 
+            // Beat-locked layout: one beat = the distance the kart covers in one beat at cruise
+            // speed, so every gap/jump edge is reached exactly on a beat of the music and the level
+            // lasts as long as its section of the song.
+            float beatDistance = plan.cruiseSpeed * analysis.SecondsPerBeat;
+
             // Smooth difficulty curve (hallazgo P9): the first playable domains are
             // forgiving (smaller gaps, fewer hazards, longer safe runway) and ramp up
             // to the full challenge by the last domain.
@@ -48,6 +53,7 @@ namespace NitroRhythm.Audio
             float beatsPerSegment = analysis.beatCount / (float)Mathf.Max(1, segmentTotal);
             int segmentIndex = 0;
             float x = levelStartX;
+            for (int b = 0; b <= analysis.beatCount; b++) plan.beatXs.Add(levelStartX + b * beatDistance);
 
             while (segmentIndex < segmentTotal)
             {
@@ -65,7 +71,7 @@ namespace NitroRhythm.Audio
                 TrackSegment segment = new TrackSegment
                 {
                     startX = x,
-                    length = spacing * Mathf.Lerp(1.15f, 0.8f, bass),
+                    length = spacing,
                     speedMultiplier = bpmFactor
                 };
 
@@ -114,9 +120,15 @@ namespace NitroRhythm.Audio
                     segment.hasRamp = false;
                 }
 
+                // Fit the platform + gap exactly into its beats: the gap opens on the next beat.
+                float span = beatDistance * Mathf.Max(1, endBeat - firstBeat);
+                segment.gap = Mathf.Min(segment.gap, span * 0.55f);
+                segment.length = Mathf.Max(3.5f, span - segment.gap);
+                segment.gap = Mathf.Max(0f, span - segment.length);
+
                 plan.segments.Add(segment);
 
-                x += segment.length + segment.gap;
+                x = levelStartX + beatDistance * endBeat;
                 segmentIndex++;
             }
 

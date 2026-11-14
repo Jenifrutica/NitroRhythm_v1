@@ -427,5 +427,90 @@ namespace NitroRhythm.Tests
             Time.captureDeltaTime = 0f;
             Assert.GreaterOrEqual(kinds.Count, 3, "El villano debe atacar varias veces.");
         }
+
+
+        /// <summary>Renders one camera alone to a PNG (close-ups that the split-screen Shot cannot frame).</summary>
+        private static void RenderCamera(Camera cam, string path, int width = 960, int height = 640)
+        {
+            RenderTexture rt = new RenderTexture(width, height, 24);
+            cam.targetTexture = rt;
+            cam.Render();
+            RenderTexture.active = rt;
+            Texture2D tex = new Texture2D(width, height, TextureFormat.RGB24, false);
+            tex.ReadPixels(new Rect(0, 0, width, height), 0, 0);
+            tex.Apply();
+            RenderTexture.active = null;
+            cam.targetTexture = null;
+            File.WriteAllBytes(path, tex.EncodeToPNG());
+            Object.Destroy(tex);
+            rt.Release();
+        }
+
+        /// <summary>Round 6 evidence: animated pilots/wheels in a race, beat lines and the 2D transition.</summary>
+        [UnityTest]
+        [Timeout(300000)]
+        public IEnumerator CaptureRound6AnimationAndTransition()
+        {
+            string dir = System.Environment.GetEnvironmentVariable("NITRO_SHOT_DIR");
+            if (string.IsNullOrEmpty(dir) || SystemInfo.graphicsDeviceType == UnityEngine.Rendering.GraphicsDeviceType.Null)
+            {
+                Assert.Ignore("NITRO_SHOT_DIR no definido: captura de evidencias omitida.");
+            }
+            Directory.CreateDirectory(dir);
+            Screen.SetResolution(1280, 720, false);
+
+            GameSession session = GameSession.EnsureExists();
+            session.Mode = GameMode.SinglePlayer;
+            session.P1CharacterId = "lyra";
+            session.BeginRun();
+            session.ControlsGuideShown = true;
+            SceneManager.LoadScene(SceneFlow.Gameplay);
+            yield return new WaitForSecondsRealtime(0.5f);
+            float guard = 0f;
+            while (Time.timeScale == 0f && guard < 10f) { yield return null; guard += Time.unscaledDeltaTime; }
+
+            TestSceneBootstrapper boot = TestSceneBootstrapper.Instance;
+            ScriptedInputProvider drive = new ScriptedInputProvider();
+            boot.Player1.GetComponent<NitroRhythm.Player.PlayerKartController>().SetInputProvider(drive);
+            drive.SetDrive(1f, 0f);
+            yield return new WaitForSecondsRealtime(1.2f);
+            yield return Shot(dir, "r6_carrera_recta.png");
+            drive.SetDrive(1f, -0.8f);   // turning left: pilot steers, leans and looks into the turn
+            yield return new WaitForSecondsRealtime(0.45f);
+            yield return Shot(dir, "r6_carrera_curva.png");
+
+            // Close-ups from the side and from the front-left with a temporary camera.
+            Transform kart = boot.Player1.transform;
+            Camera close = new GameObject("CloseUp").AddComponent<Camera>();
+            close.clearFlags = CameraClearFlags.Skybox;
+            close.fieldOfView = 40f;
+            close.transform.position = kart.position + kart.right * -7f + Vector3.up * 2.2f + kart.forward * 1f;
+            close.transform.LookAt(kart.position + Vector3.up * 1.4f);
+            RenderCamera(close, Path.Combine(dir, "r6_kart_lado_curva.png"));
+            close.transform.position = kart.position + kart.forward * 6.5f + kart.right * -3f + Vector3.up * 2.6f;
+            close.transform.LookAt(kart.position + Vector3.up * 1.6f);
+            RenderCamera(close, Path.Combine(dir, "r6_piloto_frente_curva.png"));
+            NitroRhythm.Player.KartAnimator animator = boot.Player1.GetComponent<NitroRhythm.Player.KartAnimator>();
+            if (animator != null && animator.Pilot != null) animator.Pilot.Celebrate(5f);
+            drive.SetDrive(0f, 0f);
+            yield return new WaitForSecondsRealtime(0.8f);
+            close.transform.position = kart.position + kart.forward * 6.5f + kart.right * -3f + Vector3.up * 2.6f;
+            close.transform.LookAt(kart.position + Vector3.up * 1.6f);
+            RenderCamera(close, Path.Combine(dir, "r6_piloto_celebra.png"));
+            Object.Destroy(close.gameObject);
+
+            // 2D level transition frames.
+            NitroRhythm.UI.LevelTransition.Play(1, () => { });
+            float[] at = { 0.35f, 0.9f, 1.9f, 3.2f, 4.0f };
+            float elapsed = 0f;
+            for (int i = 0; i < at.Length; i++)
+            {
+                yield return new WaitForSecondsRealtime(at[i] - elapsed);
+                elapsed = at[i];
+                yield return Shot(dir, $"r6_transicion_{i + 1}.png");
+            }
+            yield return new WaitForSecondsRealtime(2f);
+            Time.timeScale = 1f;
+        }
     }
 }

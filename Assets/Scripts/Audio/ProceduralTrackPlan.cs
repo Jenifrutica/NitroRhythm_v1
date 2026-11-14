@@ -32,5 +32,11 @@ namespace NitroRhythm.Audio
         public float trackHalfWidth = 7f;
         public float levelLength = 160f;
         public readonly List<TrackSegment> segments = new List<TrackSegment>();
+
+        /// <summary>Speed the layout is timed for: at this speed every platform edge is reached on a beat.</summary>
+        public float cruiseSpeed = 34f;
+
+        /// <summary>World X of every beat of the section (beat lines on the track).</summary>
+        public readonly List<float> beatXs = new List<float>();
     }
 }

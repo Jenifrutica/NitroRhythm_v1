@@ -69,8 +69,34 @@ namespace NitroRhythm.Audio
             StartCoroutine(PrepareRoutine());
         }
 
+        /// <summary>True once the race clock started and the music was re-synced to beat 0.</summary>
+        public bool RaceStarted { get; private set; }
+        private bool _sawIntro;
+
+        /// <summary>
+        /// The track is laid out on the beat grid of this music (one beat = cruise speed × beat length),
+        /// so the music restarts from beat 0 the moment the race starts (after the intro card / guide,
+        /// which freeze the game while the music already plays).
+        /// </summary>
+        public void SyncToRaceStart()
+        {
+            if (Source == null || Source.clip == null) return;
+            RaceStarted = true;
+            Source.Stop();
+            Source.time = 0f;
+            Source.Play();
+        }
+
         private void Update()
         {
+            // Race start = the domain's intro card (and the first-level guide) has been shown and closed.
+            if (NitroRhythm.UI.LevelIntroCard.AnyShowing) _sawIntro = true;
+            if (IsReady && !RaceStarted && _sawIntro && Time.timeScale > 0.5f
+                && !NitroRhythm.UI.LevelIntroCard.AnyShowing && !NitroRhythm.UI.ControlsOverlay.IsOpen)
+            {
+                SyncToRaceStart();
+            }
+
             if (Source == null || !Source.isPlaying) return;
 
             Source.GetSpectrumData(_spectrum, 0, FFTWindow.Blackman);

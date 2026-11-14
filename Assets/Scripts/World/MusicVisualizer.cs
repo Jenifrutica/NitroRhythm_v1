@@ -93,7 +93,7 @@ namespace NitroRhythm.World
             // Every platform has its own edge material: collect them all (once per level).
             foreach (Renderer r in FindObjectsByType<Renderer>(FindObjectsSortMode.None))
             {
-                if (r.name != "EdgeStrip") continue;
+                if (r.name != "EdgeStrip" && r.name != "BeatLine" && r.name != "BeatLineBar") continue;
                 Material m = r.sharedMaterial;
                 if (m == null || !m.HasProperty("_EmissionColor") || _edgeMaterials.Contains(m)) continue;
                 _edgeMaterials.Add(m);

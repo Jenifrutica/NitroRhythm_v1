@@ -414,8 +414,26 @@ namespace NitroRhythm.UI
         private void GoUp()
         {
             if (string.IsNullOrEmpty(_folder)) { OpenFolder(HomeFolder()); return; }
-            DirectoryInfo parent = Directory.GetParent(_folder.TrimEnd(Path.DirectorySeparatorChar));
+            DirectoryInfo parent = Directory.GetParent(_folder.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
             if (parent != null) OpenFolder(parent.FullName);
+            else if (Path.DirectorySeparatorChar == '\\') OpenDrives();   // Windows: above C:\ come the drives
+        }
+
+        /// <summary>Windows: lists the drives (C:\, D:\, USB...) so songs on any disk can be reached.</summary>
+        private void OpenDrives()
+        {
+            _folder = "";
+            _pathLabel.text = "Unidades";
+            for (int i = _listContent.childCount - 1; i >= 0; i--) Destroy(_listContent.GetChild(i).gameObject);
+            foreach (DriveInfo drive in DriveInfo.GetDrives())
+            {
+                bool ready;
+                try { ready = drive.IsReady; } catch (Exception) { ready = false; }
+                if (!ready) continue;
+                string path = drive.RootDirectory.FullName;
+                AddRow(UIIcons.Folder, path, "", UIFactory.NeonGold, () => OpenFolder(path));
+            }
+            _scroll.verticalNormalizedPosition = 1f;
         }
 
         private static string FileSize(string path)

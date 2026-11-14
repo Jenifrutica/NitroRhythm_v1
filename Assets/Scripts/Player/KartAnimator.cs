@@ -23,6 +23,14 @@ namespace NitroRhythm.Player
         private Transform _rig;
         private Transform _pivot;
         private Transform _pilot;
+        private PilotAnimator _pilotAnim;
+
+        // Wheel bones of the rigged kart FBX (Wheel_FL/FR/RL/RR): spin with speed, front ones steer.
+        private Transform[] _wheels = new Transform[0];
+        private Quaternion[] _wheelRest = new Quaternion[0];
+        private bool[] _wheelFront = new bool[0];
+        private float _wheelSpin;
+        private const float WheelRadius = 0.65f;   // world units at the normalized kart size
         private Vector3 _pilotBase;
 
         private Rigidbody _rb;
@@ -86,9 +94,32 @@ namespace NitroRhythm.Player
                 else
                 {
                     model.localPosition = Vector3.zero;
+                    KartWheelRig.Build(model.gameObject);   // wheel bones for the single-mesh kart
                 }
             }
+            FindWheelsAndPilot();
         }
+
+        private void FindWheelsAndPilot()
+        {
+            System.Collections.Generic.List<Transform> wheels = new System.Collections.Generic.List<Transform>();
+            foreach (Transform t in _pivot.GetComponentsInChildren<Transform>(true))
+            {
+                if (t.name.StartsWith("Wheel_") && t.name.Length == 8) wheels.Add(t);
+            }
+            _wheels = wheels.ToArray();
+            _wheelRest = new Quaternion[_wheels.Length];
+            _wheelFront = new bool[_wheels.Length];
+            for (int i = 0; i < _wheels.Length; i++)
+            {
+                _wheelRest[i] = _wheels[i].localRotation;
+                _wheelFront[i] = _wheels[i].name[6] == 'F';
+            }
+            if (_pilot != null) _pilotAnim = PilotAnimator.Attach(_pilot, _pilot.name.Replace("_Pilot", ""));
+        }
+
+        public int WheelCount => _wheels.Length;
+        public PilotAnimator Pilot => _pilotAnim;
 
         private void UpdateRigScale()
         {
@@ -125,7 +156,11 @@ namespace NitroRhythm.Player
 
         private void OnHit(KartHealthSpeed who, float damage)
         {
-            if (who != null && who.gameObject == gameObject) _wobble = 1f;
+            if (who != null && who.gameObject == gameObject)
+            {
+                _wobble = 1f;
+                if (_pilotAnim != null) _pilotAnim.PlayHit();
+            }
         }
 
         private void LateUpdate()
@@ -207,12 +242,36 @@ namespace NitroRhythm.Player
             float bulge = 1f / Mathf.Sqrt(squash);
             _pivot.localScale = new Vector3(bulge, squash, bulge);
 
-            // ---- pilot: leans further into the turn, looks toward it, breathes when idle
+            // ---- wheels: roll with the ground speed; the front pair steers into the turn
+            if (_wheels.Length > 0)
+            {
+                _wheelSpin = Mathf.Repeat(_wheelSpin + forwardSpeed / WheelRadius * Mathf.Rad2Deg * dt, 360f);
+                float steerDeg = Mathf.Clamp(-_roll * 3f, -24f, 24f);
+                for (int i = 0; i < _wheels.Length; i++)
+                {
+                    Transform w = _wheels[i];
+                    Transform parent = w.parent;
+                    Vector3 axle = parent.InverseTransformDirection(transform.right).normalized;
+                    Vector3 up = parent.InverseTransformDirection(transform.up).normalized;
+                    Quaternion spin = Quaternion.AngleAxis(_wheelSpin, axle);
+                    Quaternion steering = _wheelFront[i] ? Quaternion.AngleAxis(steerDeg, up) : Quaternion.identity;
+                    w.localRotation = steering * spin * _wheelRest[i];
+                }
+            }
+
+            // ---- pilot: skeletal clips (steer, boost, hit, K.O.) + a light whole-body lean
+            if (_pilotAnim != null)
+            {
+                _pilotAnim.Steer = _roll / Mathf.Max(0.01f, _maxRoll);
+                _pilotAnim.Boosting = _kart != null && _kart.IsBoosting;
+                _pilotAnim.Down = down;
+            }
             if (_pilot != null)
             {
-                float lean = _roll * 1.2f;
-                float look = Mathf.Clamp(-_roll * 2.2f, -14f, 14f);
-                float slump = down ? 18f : 0f;
+                bool skeletal = _pilotAnim != null && _pilotAnim.HasClips;
+                float lean = _roll * (skeletal ? 0.5f : 1.2f);
+                float look = skeletal ? 0f : Mathf.Clamp(-_roll * 2.2f, -14f, 14f);
+                float slump = down && !skeletal ? 18f : 0f;
                 _pilot.localRotation = Quaternion.Euler(slump - _pitch * 0.4f, look, lean);
                 float breathe = Mathf.Sin(t * 2.4f) * 0.025f * (1f - speed01);
                 _pilot.localPosition = _pilotBase + new Vector3(0f, breathe, 0f);

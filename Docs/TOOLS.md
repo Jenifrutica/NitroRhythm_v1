@@ -17,6 +17,7 @@ UNITY="/home/jenifrutica/SENA/Unity/Hub/Editor/6000.5.8f1/Editor/Unity"
 | :-- | :-- | :-- |
 | **NitroRhythm ▸ Build Prototype Scenes** | `PrototypeSceneBuilder.BuildAll` | Crea/actualiza las 4 escenas (`00_MainMenu..03_Results`), registra Build Settings y crea los materiales base. También se ejecuta solo si faltan escenas al abrir el proyecto. |
 | **NitroRhythm ▸ Build WebGL** | `PrototypeSceneBuilder.BuildWebGL` | `BuildAll` + Brotli/Decompression Fallback + `BuildPipeline.BuildPlayer` a `Builds/WebGL`. |
+| **NitroRhythm ▸ Build Windows** / **Build macOS** / **Build Everything** | `PrototypeSceneBuilder.BuildWindows` / `BuildMac` / `BuildEverything` | `Builds/Windows/NitroRhythm.exe`, `Builds/macOS/NitroRhythm.app`, o las cuatro plataformas seguidas (sale con código 1 si una falla). |
 | **NitroRhythm ▸ Build Linux** | `PrototypeSceneBuilder.BuildLinux` | `BuildAll` + build `StandaloneLinux64` a `Builds/Linux/NitroRhythm.x86_64`. |
 | *(sin menú)* | `PrototypeSceneBuilder.BuildWebGLDebug` | Build WebGL de desarrollo sin compresión y con stack traces a `Builds/WebGLDebug`. |
 | **NitroRhythm ▸ Ensure Base Materials** | `PrototypeSceneBuilder.EnsureMaterials` | Crea solo los materiales base en `Resources/NitroRhythm/Materials`. |
@@ -61,6 +62,8 @@ Para PDF: `soffice --headless --convert-to pdf --outdir <dir> <archivo>.docx`.
 | `render_views.py` | Renderiza vistas frente/lado/atrás/3-4 de personajes. |
 | `contact_thumbs.py` | Hoja de contactos de vistas. |
 | `hdr_to_jpg.py` | Convierte HDRI a JPG LDR para los cielos. |
+| `rig_models.py` | Crea los clips de los pilotos (Idle, Steer, Boost, Celebrate, Hit, KO) en su esqueleto y renderiza vistas previas; con `--karts` inspecciona la detección de ruedas. |
+| `probe_rig.py`, `probe_bones.py`, `probe_wheels.py`, `probe_fbx_nodes.py` | Diagnóstico: objetos/armaduras, huesos, ruedas y nodos FBX. |
 
 Ejecución:
 ```bash

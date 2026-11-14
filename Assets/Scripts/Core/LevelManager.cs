@@ -318,6 +318,8 @@ namespace NitroRhythm.Core
                 platformIndex++;
             }
 
+            SpawnBeatLines(plan);
+
             float levelEnd = plan.segments.Count > 0
                 ? plan.segments[plan.segments.Count - 1].startX + plan.segments[plan.segments.Count - 1].length
                 : plan.levelLength;
@@ -645,6 +647,40 @@ namespace NitroRhythm.Core
         }
 
         /// <summary>Glowing strips along both long edges so the track reads clearly against the void.</summary>
+        /// <summary>
+        /// A thin neon line across the track on every beat that lands on a platform: the player sees the
+        /// rhythm grid the track was built on (they flash with the kick, see MusicVisualizer).
+        /// </summary>
+        private void SpawnBeatLines(NitroRhythm.Audio.ProceduralTrackPlan plan)
+        {
+            NitroRhythm.World.DomainTheme theme = NitroRhythm.World.DomainTheme.Current;
+            Color accent = theme != null ? theme.accent : Color.cyan;
+            Material glow = NitroRhythm.World.DomainMaterials.Glow(accent * 0.2f, accent, 1.6f);
+
+            int segment = 0;
+            for (int i = 0; i < plan.beatXs.Count; i++)
+            {
+                float x = plan.beatXs[i];
+                while (segment < plan.segments.Count && plan.segments[segment].startX + plan.segments[segment].length < x) segment++;
+                if (segment >= plan.segments.Count) break;
+                NitroRhythm.Audio.TrackSegment s = plan.segments[segment];
+                if (x < s.startX + 0.6f || x > s.startX + s.length - 0.6f) continue;   // the beat falls in a gap
+
+                GameObject line = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                line.name = (i % 4 == 0) ? "BeatLineBar" : "BeatLine";
+                Collider c = line.GetComponent<Collider>();
+                if (c != null) Destroy(c);
+                line.transform.SetParent(_levelParent, true);
+                line.transform.position = new Vector3(x, _platformHeight + 0.03f, 0f);
+                // Downbeats (every 4th) are wider, like bar lines on a score.
+                line.transform.localScale = new Vector3(i % 4 == 0 ? 0.32f : 0.14f, 0.04f, _trackHalfWidth * 2f - 0.6f);
+                Renderer r = line.GetComponent<Renderer>();
+                r.sharedMaterial = glow;
+                r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                _spawnedObjects.Add(line);
+            }
+        }
+
         private void SpawnEdgeStrips(float startX, float width, NitroRhythm.World.DomainTheme theme)
         {
             Material glow = NitroRhythm.World.DomainMaterials.Glow(theme.accent * 0.3f, theme.accent, 2.4f);

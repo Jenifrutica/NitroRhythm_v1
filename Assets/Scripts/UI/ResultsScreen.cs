@@ -69,6 +69,7 @@ namespace NitroRhythm.UI
             CharacterDisplay display = podium.AddComponent<CharacterDisplay>();
             display.Build(winner, new Vector3(3.9f, 0.4f, 0f), true, false);
             display.SetSelected(true);
+            if (display.Pilot != null) display.Pilot.Celebrate(9999f);   // the winner cheers on the podium
         }
 
         private void Build()
