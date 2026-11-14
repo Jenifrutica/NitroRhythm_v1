@@ -224,8 +224,11 @@ found`, exit 198): abrir **Unity Hub** y volver a iniciar sesión. Pasó el 2026
 - La build **release no es determinista**: jugarla siempre en navegador antes de
   entregar (`Docs/Tools/docs/webgl_play.js`; requiere `playwright-core`, ver RUNBOOK §5).
 - Servir con `python3 -m http.server 8080`; nunca abrir `index.html` con `file://`.
-- Si el 3D no se dibuja: revisar `ModelSanitizer` (debe **desactivar**, no destruir,
-  cámaras/luces de FBX) y los materiales base.
+- Si el 3D no se dibuja y la consola muestra `Mismatch between texture format and
+  sampler type`: `Assets/Settings/Mobile_RPAsset.asset` (el pipeline de WebGL) debe tener
+  **sombras de luz principal y light cookies desactivadas** (corregido el 2026-11-14; era la
+  causa de la build “no determinista”). Revisar también `ModelSanitizer` (debe **desactivar**,
+  no destruir, cámaras/luces de FBX) y los materiales base.
 
 ### Capturas de evidencia
 - Requieren **gráficos** (sin `-nographics`) y `NITRO_SHOT_DIR`:

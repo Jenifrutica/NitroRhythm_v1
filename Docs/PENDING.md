@@ -9,7 +9,7 @@ es lo que queda para una versión de producción.
 
 | # | Severidad | Descripción | Dónde | Nota |
 | :-- | :-- | :-- | :-- | :-- |
-| 1 | Media | **Release WebGL no determinista**: dos builds del mismo código pueden diferir; una puede no dibujar 3D. | Build | Probar siempre la build release en navegador (`webgl_play.js`). |
+| 1 | — | ~~Release WebGL “no determinista” sin 3D~~ → causa encontrada (2026-11-14): `Mobile_RPAsset` (calidad de WebGL) tenía sombras de luz principal y cookies activas sin que el sol proyectara sombras; en WebGL2 quedaba una textura de sombra con formato incorrecto y el navegador descartaba todo lo Lit (`GL_INVALID_OPERATION … Mismatch between texture format and sampler type`). Se desactivaron en ese asset. | `Assets/Settings/Mobile_RPAsset.asset` | Seguir probando la build en navegador (`webgl_song_test.js`). |
 | 2 | Baja | Pilotos/karts con animación **procedural** (`KartAnimator`), no esquelética: sin brazos/volante ni ruedas que giren (el FBX es una sola malla). | `Player/KartAnimator.cs` | Para más, rigging en Blender + `Animator`. |
 | 3 | Baja | La canción del jugador se reproduce en **mono** (y a 32 kHz en web) para ahorrar memoria. El BPM supone tempo constante (70–180). | `UserSong`, `SongLoader` | Aceptable para el prototipo. |
 | 4 | Baja | `SampleScene.unity` legacy y restos de la plantilla URP (`TutorialInfo`, `Readme.asset`, `SampleSceneProfile`, carpetas vacías). | `Assets/` | Se puede eliminar (ver `ASSETS.md` §12). |

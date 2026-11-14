@@ -13,6 +13,9 @@ Historial de rondas de desarrollo. Fechas del entorno de trabajo.
 - **Animación procedural** de kart y piloto (`KartAnimator`) y salto con giro en el garaje.
 - **Ambientación**: muros-ecualizador reactivos al espectro, luz/bloom que laten con los
   graves, bordes de pista que destellan al compás.
+- **Corrección WebGL**: sombras de luz principal y light cookies desactivadas en
+  `Mobile_RPAsset` (pipeline de WebGL); eran la causa de que la build web a veces no
+  dibujara nada Lit. Build web verificada en navegador con una canción MP3 subida.
 - **Corrección**: `UIHoverEffect` repintaba los botones con su color inicial y borraba la
   selección (modo de juego, P1/P2 no se marcaban).
 - **Pruebas**: 69 PlayMode (58 OK, 11 omitidas) + 4 EditMode, 0 fallos. Las pruebas de flujo
