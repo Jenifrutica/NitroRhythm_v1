@@ -40,6 +40,15 @@ namespace NitroRhythm.Core
             EnableOnCameras();
         }
 
+        private static float _baseBloom = -1f;
+
+        /// <summary>Music pulse: raises the bloom above the domain's base by <paramref name="amount"/> (0..1 ≈ +0..60 %).</summary>
+        public static void SetBloomPulse(float amount)
+        {
+            if (_volume == null || _volume.sharedProfile == null || _baseBloom < 0f) return;
+            if (_volume.sharedProfile.TryGet(out Bloom bloom)) bloom.intensity.value = _baseBloom * (1f + 0.6f * Mathf.Clamp01(amount));
+        }
+
         /// <summary>Per-domain grading: bloom strength, saturation, colour filter and vignette.</summary>
         public static void ApplyTheme(float bloomIntensity, float saturation, Color colorFilter, float vignetteIntensity)
         {
@@ -47,6 +56,7 @@ namespace NitroRhythm.Core
             if (_volume == null || _volume.sharedProfile == null) return;
 
             VolumeProfile profile = _volume.sharedProfile;
+            _baseBloom = bloomIntensity;
             if (profile.TryGet(out Bloom bloom)) bloom.intensity.value = bloomIntensity;
             if (profile.TryGet(out ColorAdjustments adjustments))
             {

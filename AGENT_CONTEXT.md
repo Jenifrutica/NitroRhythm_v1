@@ -4,7 +4,7 @@
 > repositorio, lee esto completo antes de tocar código. Describe qué hay, cómo
 > funciona, dónde está, qué falta y las trampas del entorno.
 >
-> Última revisión: 2026-11-13 · Estado: **ronda 4 cerrada, repo limpio y pusheado**.
+> Última revisión: 2026-11-13 (auditada contra el código) · Estado: **ronda 4 cerrada, repo limpio y pusheado**.
 > Documentos de apoyo: `Docs/ARCHITECTURE.md`, `Docs/RUNBOOK.md`,
 > `Docs/PENDING.md`, `Docs/CHANGELOG.md`, `Docs/EVIDENCIAS.md`,
 > `Docs/TOOLS.md`, `Docs/ASSETS.md`.
@@ -16,7 +16,8 @@
 - **Qué es:** prototipo de carreras arcade 3D en **Unity 6 (URP)** con pistas
   generadas a partir de música, persecución Héroes vs Villano y multijugador local
   de 1–3 jugadores. Evidencia SENA **GA5-220501087**.
-- **Estado:** jugable, 4 escenas, 7 dominios, 40 pruebas en verde, build WebGL/Linux.
+- **Estado:** jugable, 4 escenas, 7 dominios, build WebGL/Linux, **canciones locales del
+  jugador** (ronda 5). Pruebas: 69 PlayMode (58 OK, 11 omitidas) + 4 EditMode OK, 0 fallos (2026-11-14).
 - **Repo:** https://github.com/Jenifrutica/NitroRhythm_v1 (público) · `main` limpio.
 - **Release:** https://github.com/Jenifrutica/NitroRhythm_v1/releases/tag/v1.3
 - **No hay nada pendiente de commit.** `git status` vacío.
@@ -37,7 +38,8 @@
 | :-- | :-- |
 | **Proyecto Unity (raíz del repo)** | `/home/jenifrutica/SENA/NitroRythm/My project` |
 | Contenedor del proyecto | `/home/jenifrutica/SENA/NitroRythm` |
-| Builds (no versionadas) | `/home/jenifrutica/SENA/NitroRythm/Builds` |
+| Salida de los builds (no versionada) | `/home/jenifrutica/SENA/NitroRythm/My project/Builds/{WebGL,Linux,WebGLDebug}` |
+| Archivo de ZIPs publicados (v1.2/v1.3) | `/home/jenifrutica/SENA/NitroRythm/Builds` (su `WebGL/` es del 2026-10-01: **vieja**) |
 | Entregas de evidencias | `/home/jenifrutica/SENA/NitroRythm/Entregas` |
 | ZIPs finales (solo entregables) | `/home/jenifrutica/Downloads/Evidencias_GA5_NitroRhythm` |
 | Editor Unity | `/home/jenifrutica/SENA/Unity/Hub/Editor/6000.5.8f1/Editor/Unity` |
@@ -99,6 +101,11 @@ Assets/Tests/    10 archivos de prueba (PlayMode + EditMode)
 | `Core/ModelSanitizer.cs` | **Desactiva** cámaras/luces/AudioListener de los FBX (no destruir: rompe URP). |
 | `Core/ModelNormalizer.cs` | Normaliza escala de modelos (incluye SkinnedMesh). |
 | `Core/KartAnchors.cs` | `RootTransform`, `CenterOfMass`, `FiringPoint`, `WheelMeshes`, `HoverEffect`. |
+| `Audio/UserSong.cs` | **Canción del jugador**: PCM mono + análisis; un tramo por dominio (`GetSection`, `SectionAnalysis`, `CreateSectionClip`). Vive en `GameSession.UserSong`. |
+| `Audio/SongLoader.cs` | Carga la canción: WebGL vía `Assets/Plugins/WebGL/NitroSongPicker.jslib` (selector del navegador + WebAudio); escritorio vía `UnityWebRequestMultimedia`. |
+| `UI/SongPickerPanel.cs` | Panel “TU CANCIÓN” (selección de piloto): selector web o explorador de archivos propio. |
+| `Player/KartAnimator.cs` | Animación procedural de kart/piloto bajo `AnimRig/AnimPivot` (no buscar los modelos como hijos directos). |
+| `World/MusicVisualizer.cs` | Muros-ecualizador + luz/bloom/bordes que laten con la música. |
 
 ---
 
@@ -158,7 +165,9 @@ Carga: `Resources.Load<TextAsset>("NitroRhythm/prototype_data")` → `PrototypeD
 - **UI**: retratos (`Portraits/`), ilustraciones de dominio (`UI/Domains/`).
 - **Materiales base** en `Resources/.../Materials` (`BaseLit`, `BaseUnlit`, `BaseUI`,
   `BaseParticles`, `SkyPanoramic`, `SkyProcedural`): **garantizan que los shaders URP
-  entren al build**; el runtime clona estos materiales (no `Shader.Find`).
+  entren al build**; el runtime clona estos materiales. Aún quedan `Shader.Find` como
+  respaldo en `EnvironmentManager`, `StageFactory` y `VisualEntityFactory`: si se
+  añade un shader nuevo, añadir también su material base.
 - **Pipeline**: Hunyuan3D/Blender → FBX → `Assets/Models` → copia a
   `Assets/Resources/NitroRhythm/Models` → `ModelNormalizer` + material URP con textura.
 - Scripts de Blender en `Docs/Tools/blender/` (generar, previsualizar, medir,
@@ -169,9 +178,14 @@ Carga: `Resources.Load<TextAsset>("NitroRhythm/prototype_data")` → `PrototypeD
 
 ## 6. Pruebas y verificación
 
-- **PlayMode**: 41 casos → **36 OK, 0 fallos, 5 omitidos** (generadores de capturas
-  que solo corren con `NITRO_SHOT_DIR`).
-- **EditMode**: 4 OK.
+- **Última ejecución completa (2026-11-14)**: PlayMode 69 casos → **58 OK, 0 fallos,
+  11 omitidos** (generadores de capturas que solo corren con `NITRO_SHOT_DIR`);
+  **EditMode** 4 OK. Detalle: `Docs/Evidencias/RESULTADO_PRUEBAS.md`.
+- La batería completa tarda ~2 min. Las pruebas que cargan `02_Gameplay` con
+  `BeginRun()` deben poner `ControlsGuideShown = true`: la guía del primer nivel pausa
+  el juego y un `WaitForSeconds` esperaría para siempre (el proceso no se cuelga: espera).
+- Lanzar con `timeout` y, si vence, matar el `Editor/Unity -batchmode` por PID (el
+  `timeout` solo cierra el envoltorio de flatpak y el editor huérfano bloquea el proyecto).
 - Archivos: `Assets/Tests/PlayMode/*`, `Assets/Tests/EditMode/SceneSetupTests.cs`.
 - Resultado legible: `Docs/Evidencias/RESULTADO_PRUEBAS.md`.
 - Generadores de captura: `GameplayEvidenceCapture`, `GameplayFlowTests`,
@@ -194,18 +208,21 @@ flatpak run --command="$UNITY" com.unity.UnityHub \
   -executeMethod NitroRhythm.EditorTools.PrototypeSceneBuilder.BuildWebGL \
   -logFile ".../Logs/cli_webgl.log"
 ```
-Si aun así falla: abrir **Unity Hub** y volver a iniciar sesión.
+Si aun así falla (`Access token is unavailable` / `No valid Unity Editor license
+found`, exit 198): abrir **Unity Hub** y volver a iniciar sesión. Pasó el 2026-11-13.
 
 ### Escenas y build
 - Las 4 escenas se generan con **NitroRhythm ▸ Build Prototype Scenes**
   (`Assets/Editor/PrototypeSceneBuilder.cs`), que también crea los materiales base.
-- Build: **NitroRhythm ▸ Build WebGL** (Brotli + Decompression Fallback).
+- Build: **NitroRhythm ▸ Build WebGL** (Brotli + Decompression Fallback) →
+  `Builds/WebGL`; **NitroRhythm ▸ Build Linux** → `Builds/Linux/NitroRhythm.x86_64`;
+  `PrototypeSceneBuilder.BuildWebGLDebug` (solo `-executeMethod`) → `Builds/WebGLDebug`.
 - Tras cada build, `git checkout -- Assets/Scenes` (el build puede tocar las escenas).
 - `Builds/`, `Logs/`, `Library/`, `Temp/` están en `.gitignore`.
 
 ### WebGL
 - La build **release no es determinista**: jugarla siempre en navegador antes de
-  entregar (`Docs/Tools/docs/webgl_play.js`).
+  entregar (`Docs/Tools/docs/webgl_play.js`; requiere `playwright-core`, ver RUNBOOK §5).
 - Servir con `python3 -m http.server 8080`; nunca abrir `index.html` con `file://`.
 - Si el 3D no se dibuja: revisar `ModelSanitizer` (debe **desactivar**, no destruir,
   cámaras/luces de FBX) y los materiales base.
@@ -248,8 +265,8 @@ Si aun así falla: abrir **Unity Hub** y volver a iniciar sesión.
 ## 9. Qué falta / backlog
 
 Ver `Docs/PENDING.md` para el detalle. Resumen:
-1. Pilotos **sin animación** (mallas estáticas).
-2. **Selector de audio externo** (hoy solo `GameSession.AudioTrackPath`).
+1. Animación solo **procedural** (no hay rig esquelético en los FBX).
+2. Canción del jugador en **mono**; BPM constante 70–180.
 3. `SampleScene` legacy y código muerto (`GameModeManager`, `ObstacleLauncher`).
 4. **WebGL release no determinista** (verificar siempre en navegador).
 5. Sin **mobile/touch**, sin **CI**, sin **localización**.

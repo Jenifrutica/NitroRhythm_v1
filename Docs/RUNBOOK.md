@@ -52,7 +52,10 @@ python3 "$PROJECT/Docs/Tools/docs/summarize_tests.py"
 # → Docs/Evidencias/RESULTADO_PRUEBAS.md
 ```
 
-Resultado esperado: **36 PlayMode OK + 5 omitidas + 4 EditMode OK, 0 fallos**.
+Resultado esperado (2026-11-14): **69 PlayMode → 58 OK + 11 omitidas, 4 EditMode OK,
+0 fallos** (~2 min). Las omitidas son generadores de capturas. Si una corrida no termina,
+matar el `Editor/Unity -batchmode` por PID (ver §11).
+Si sale `exit 198` / `No valid Unity Editor license found`: iniciar sesión en Unity Hub.
 
 ---
 
@@ -89,8 +92,23 @@ git -C "$PROJECT" checkout -- Assets/Scenes
 ```
 
 ### Linux
-Menú de Unity: **File ▸ Build Settings ▸ Linux** (o `BuildPipeline` con
-`BuildTarget.StandaloneLinux64`). Salida en `Builds/Linux`.
+```bash
+flatpak run --command="$UNITY" com.unity.UnityHub \
+  -batchmode -nographics -quit \
+  -projectPath "$PROJECT" \
+  -executeMethod NitroRhythm.EditorTools.PrototypeSceneBuilder.BuildLinux \
+  -logFile "$PROJECT/Logs/cli_linux.log"
+```
+Salida: `$PROJECT/Builds/Linux/NitroRhythm.x86_64` (también menú **NitroRhythm ▸ Build Linux**).
+
+### WebGL de depuración
+`-executeMethod NitroRhythm.EditorTools.PrototypeSceneBuilder.BuildWebGLDebug` →
+`$PROJECT/Builds/WebGLDebug` (sin compresión, stack traces completos).
+
+### Dónde quedan los builds
+- Salida real: `$PROJECT/Builds/` (no versionada).
+- `SENA/NitroRythm/Builds/` es el **archivo de ZIPs** publicados (v1.2/v1.3); su
+  carpeta `WebGL/` es del 2026-10-01 y no corresponde a la versión actual.
 
 > La build **release WebGL no es determinista**. Jugarla siempre antes de entregar.
 
@@ -107,11 +125,28 @@ python3 -m http.server 8080
 No abrir `index.html` con `file://`.
 
 ### Prueba automatizada en navegador
+El script necesita `playwright-core` (la ruta antigua
+`~/Proyectos/legato/node_modules` ya no existe). Instalarlo una vez fuera del repo:
 ```bash
-NODE_PATH=/home/jenifrutica/Proyectos/legato/node_modules \
-  node "$PROJECT/Docs/Tools/docs/webgl_play.js"
-# (servir la build antes en un puerto; ver encabezado del script)
+mkdir -p ~/SENA/NitroRythm/Tools/node && cd ~/SENA/NitroRythm/Tools/node
+npm i playwright-core   # usa los Chromium ya presentes en ~/.cache/ms-playwright
 ```
+Uso (servir la build antes en un puerto libre, con `setsid nohup ... & disown`):
+```bash
+NODE_PATH=~/SENA/NitroRythm/Tools/node/node_modules \
+  node "$PROJECT/Docs/Tools/docs/webgl_play.js" http://localhost:8080 /ruta/salida
+```
+Guarda capturas `1_menu`, `2_seleccion`, … y lista errores de consola.
+
+### Prueba de “TU CANCIÓN” en la build web
+```bash
+NODE_PATH=~/SENA/NitroRythm/Tools/node/node_modules \
+  node "$PROJECT/Docs/Tools/docs/webgl_song_test.js" http://localhost:8091 /ruta/salida \
+  /ruta/cancion.mp3 ~/.cache/ms-playwright/chromium-1243/chrome-linux64/chrome
+```
+Abre el panel, usa el selector de archivos del navegador, espera el `[SongLoader]` del
+análisis, arranca la carrera y guarda capturas + `consola.txt`. Si `playwright-core` no
+encuentra su navegador, pasar la ruta de un Chromium de `~/.cache/ms-playwright` (4.º argumento).
 
 ---
 

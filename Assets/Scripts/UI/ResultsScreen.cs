@@ -85,8 +85,13 @@ namespace NitroRhythm.UI
             TextMeshProUGUI title = UIFactory.CreateTitle(canvas.transform, "Title", "HARMONÍA RESTAURADA", 62f, UIFactory.NeonGold, UIFactory.NeonGold, TextAlignmentOptions.Left);
             Anchor(title.rectTransform, new Vector2(0f, 1f), new Vector2(90f, -60f), new Vector2(1100f, 80f));
 
-            TextMeshProUGUI subtitle = UIFactory.CreateLabel(canvas.transform, "Subtitle",
-                "Renacimiento de Harmonya  —  fin del prototipo", 30f, UIFactory.TextSoft, TextAlignmentOptions.Left);
+            GameSession songSession = GameSession.Instance;
+            string subtitleText = songSession != null && songSession.HasUserSong
+                ? $"Renacimiento de Harmonya  —  al ritmo de «{songSession.UserSong.Name}» ({Mathf.RoundToInt(songSession.UserSong.Analysis.bpm)} BPM)"
+                : "Renacimiento de Harmonya  —  fin del prototipo";
+            TextMeshProUGUI subtitle = UIFactory.CreateLabel(canvas.transform, "Subtitle", subtitleText, 30f, UIFactory.TextSoft, TextAlignmentOptions.Left);
+            subtitle.enableWordWrapping = false;
+            subtitle.overflowMode = TextOverflowModes.Ellipsis;
             Anchor(subtitle.rectTransform, new Vector2(0f, 1f), new Vector2(94f, -146f), new Vector2(1100f, 40f));
 
             // Rank badge.

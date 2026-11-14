@@ -31,7 +31,7 @@ Ruta base: `Assets/Resources/NitroRhythm/` (todo se carga por `Resources.Load`).
 | `Piloto_Neon_01.fbx` | Piloto (skinned) | Lyra |
 | `Piloto_Neon_02.fbx` | Piloto (skinned) | Karel |
 | `Piloto_Neon_03.fbx` | Piloto (skinned) | Vox |
-| `PremioMalo.fbx` | Proyectil del villano | — |
+| `PremioMalo.fbx` | Respaldo del proyectil (solo si falta `Props/PrizeBad`); lo comprueba `SceneSetupTests` | — |
 
 - Origen: modelos propios generados con **Hunyuan3D** y refinados en **Blender**
   (`SENA/general/`), texturizados con los atlas de color base.
@@ -46,7 +46,7 @@ Ruta base: `Assets/Resources/NitroRhythm/` (todo se carga por `Resources.Load`).
 | Archivo | Uso |
 | :-- | :-- |
 | `PrizeGood.fbx` | Premio recogible en pista (turbo). |
-| `PrizeBad.fbx` | Proyectil del villano. |
+| `PrizeBad.fbx` | Proyectil del villano (modelo principal, `VillainBoss`). |
 | `SpikeBall.fbx` | Bola de espinas (hazards/barras). |
 | `Torre1..4.fbx` | Torres-altavoz (pilares de checkpoint y decoración). |
 | `TrebleClef.fbx` | Clave de sol decorativa. |
@@ -128,7 +128,8 @@ Bassline Abyss, Arpeggion y Void Crescendo.
 
 **Por qué existen:** `Shader.Find` puede devolver `null` en el build (shader
 stripped) y todo sale magenta. El runtime clona estos materiales para garantizar
-que el shader esté incluido.
+que el shader esté incluido. Quedan `Shader.Find` de respaldo en
+`EnvironmentManager`, `StageFactory` y `VisualEntityFactory`.
 
 ---
 
@@ -178,4 +179,14 @@ Detalle completo en `Docs/CREDITOS_Y_LICENCIAS.md`.
   ajusta a un tamaño mundial fijo.
 - **TMP**: los recursos esenciales están en `Assets/TextMesh Pro/`; no borrar.
 - **link.xml**: preserva `UnityEngine.PhysicsModule` para el `MeshCollider` del suelo.
-- **WebGL**: no hay archivos de audio; música/SFX son procedurales.
+- **WebGL**: no hay archivos de audio; música/SFX son procedurales. La música del jugador se
+  carga en tiempo de ejecución (no es un asset).
+- `Docs/Tools/test_data/cancion_prueba_128bpm.mp3`: 20 s sintéticos (generados con Python +
+  ffmpeg) para la prueba de carga MP3; no entra al build.
+- `Assets/Plugins/WebGL/NitroSongPicker.jslib`: plugin del selector de canciones (solo WebGL).
+- **Carpetas vacías o sin uso**: `Resources/NitroRhythm/Shaders/` (vacía),
+  `Assets/Materials/` (vacía), `Assets/Prefabs/Player/`, `Assets/InputSystem_Actions`
+  (el juego usa `Input` clásico).
+- **Restos de la plantilla URP**: `Assets/TutorialInfo/`, `Assets/Readme.asset`,
+  `Assets/Settings/SampleSceneProfile.asset` y `Scenes/SampleScene.unity`.
+- `Assets/InitTestScene*.unity` los crea el Test Runner; están en `.gitignore`.

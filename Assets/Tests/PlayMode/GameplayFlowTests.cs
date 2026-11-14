@@ -19,6 +19,7 @@ namespace NitroRhythm.Tests
             GameSession session = GameSession.EnsureExists();
             session.Mode = GameMode.SinglePlayer;
             session.BeginRun();
+            session.ControlsGuideShown = true;   // the first-level guide pauses the game; it has its own test
             session.CurrentLevelIndex = 1;
 
             SceneManager.LoadScene(SceneFlow.Gameplay);
@@ -87,6 +88,7 @@ namespace NitroRhythm.Tests
             GameSession session = GameSession.EnsureExists();
             session.Mode = GameMode.SinglePlayer;
             session.BeginRun();
+            session.ControlsGuideShown = true;   // the first-level guide pauses the game; it has its own test
             session.CurrentLevelIndex = 1;
             SceneManager.LoadScene(SceneFlow.Gameplay);
             yield return new WaitForSecondsRealtime(0.5f);
@@ -136,6 +138,7 @@ namespace NitroRhythm.Tests
             session.P1CharacterId = "lyra";
             session.P2CharacterId = "karel";
             session.BeginRun();
+            session.ControlsGuideShown = true;   // the first-level guide pauses the game; it has its own test
             session.CurrentLevelIndex = 1;
             SceneManager.LoadScene(SceneFlow.Gameplay);
             yield return new WaitForSecondsRealtime(0.5f);
@@ -144,9 +147,9 @@ namespace NitroRhythm.Tests
             while (Time.timeScale == 0f && guard < 8f) { yield return null; guard += Time.unscaledDeltaTime; }
 
             Assert.IsNotNull(boot.Player2, "En cooperativo debe existir el jugador 2.");
-            Assert.IsNotNull(boot.Player1.transform.Find("Kart_Neon_01_Visual"), "P1 debe usar el kart de Lyra.");
-            Assert.IsNotNull(boot.Player2.transform.Find("Kart_Neon_02_Visual"), "P2 debe usar el kart de Karel.");
-            Assert.IsNull(boot.Player2.transform.Find("Kart_Neon_01_Visual"), "P2 no puede llevar el kart de Lyra.");
+            Assert.IsNotNull(FindDeep(boot.Player1.transform, "Kart_Neon_01_Visual"), "P1 debe usar el kart de Lyra.");
+            Assert.IsNotNull(FindDeep(boot.Player2.transform, "Kart_Neon_02_Visual"), "P2 debe usar el kart de Karel.");
+            Assert.IsNull(FindDeep(boot.Player2.transform, "Kart_Neon_01_Visual"), "P2 no puede llevar el kart de Lyra.");
 
             Assert.Greater(Vector3.Distance(boot.Player1.transform.position, boot.Player2.transform.position), 2.5f, "Los karts de P1 y P2 no pueden ir uno encima del otro.");
 
@@ -164,6 +167,7 @@ namespace NitroRhythm.Tests
             GameSession session = GameSession.EnsureExists();
             session.Mode = GameMode.SinglePlayer;
             session.BeginRun();
+            session.ControlsGuideShown = true;   // the first-level guide pauses the game; it has its own test
             session.CurrentLevelIndex = 1;
             SceneManager.LoadScene(SceneFlow.Gameplay);
             yield return new WaitForSecondsRealtime(0.5f);
@@ -203,6 +207,7 @@ namespace NitroRhythm.Tests
             session.P1CharacterId = "lyra";
             session.P2CharacterId = "karel";
             session.BeginRun();
+            session.ControlsGuideShown = true;   // the first-level guide pauses the game; it has its own test
             session.CurrentLevelIndex = 1;
             SceneManager.LoadScene(SceneFlow.Gameplay);
             yield return new WaitForSecondsRealtime(0.5f);
@@ -274,6 +279,7 @@ namespace NitroRhythm.Tests
                 GameSession session = GameSession.EnsureExists();
                 session.Mode = GameMode.SinglePlayer;
                 session.BeginRun();
+                session.ControlsGuideShown = true;   // the first-level guide pauses the game; it has its own test
                 session.CurrentLevelIndex = level;
                 SceneManager.LoadScene(SceneFlow.Gameplay);
                 yield return new WaitForSecondsRealtime(0.5f);
@@ -303,6 +309,16 @@ namespace NitroRhythm.Tests
                     Debug.Log($"[FlowTest] shot lvl{level}#{shot} cam={cam.transform.position} kart={boot.Player1.transform.position}");
                 }
             }
+        }
+
+        /// <summary>The kart models live under the animation rig, so search the whole hierarchy.</summary>
+        private static Transform FindDeep(Transform root, string name)
+        {
+            foreach (Transform t in root.GetComponentsInChildren<Transform>(true))
+            {
+                if (t.name == name) return t;
+            }
+            return null;
         }
     }
 }

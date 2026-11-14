@@ -17,9 +17,12 @@ UNITY="/home/jenifrutica/SENA/Unity/Hub/Editor/6000.5.8f1/Editor/Unity"
 | :-- | :-- | :-- |
 | **NitroRhythm ▸ Build Prototype Scenes** | `PrototypeSceneBuilder.BuildAll` | Crea/actualiza las 4 escenas (`00_MainMenu..03_Results`), registra Build Settings y crea los materiales base. También se ejecuta solo si faltan escenas al abrir el proyecto. |
 | **NitroRhythm ▸ Build WebGL** | `PrototypeSceneBuilder.BuildWebGL` | `BuildAll` + Brotli/Decompression Fallback + `BuildPipeline.BuildPlayer` a `Builds/WebGL`. |
+| **NitroRhythm ▸ Build Linux** | `PrototypeSceneBuilder.BuildLinux` | `BuildAll` + build `StandaloneLinux64` a `Builds/Linux/NitroRhythm.x86_64`. |
+| *(sin menú)* | `PrototypeSceneBuilder.BuildWebGLDebug` | Build WebGL de desarrollo sin compresión y con stack traces a `Builds/WebGLDebug`. |
+| **NitroRhythm ▸ Ensure Base Materials** | `PrototypeSceneBuilder.EnsureMaterials` | Crea solo los materiales base en `Resources/NitroRhythm/Materials`. |
 | **NitroRhythm ▸ Build Font Assets** | `FontAssetBuilder.Build` | Genera los `TMP_FontAsset` de Orbitron, Rajdhani y Material Icons + materiales glow en `Resources/NitroRhythm/Fonts`. |
 | **NitroRhythm ▸ Probe Model Alignment** | `ModelAlignmentProbe.Run` | Mide bounds de kart/piloto por personaje para ajustar `pilotOffset`/`pilotScale`. |
-| **NitroRhythm ▸ Evidence Capture Tool** | `EvidenceCaptureTool` (EditorWindow) | Abre cada escena y captura el Game View a `Evidencias/Antes` o `Despues`. En Play usa `ScreenCapture`; en Edit renderiza la cámara a `RenderTexture`. |
+| **NitroRhythm ▸ Evidence Capture Tool** | `EvidenceCaptureTool` (EditorWindow) | Captura el Game View a `<raíz del proyecto>/Evidencias/Antes` o `Despues` (**no** a `Docs/Capturas`; mover a mano). En Play usa `ScreenCapture`; en Edit renderiza la cámara a `RenderTexture`. |
 
 Notas:
 - `PrototypeSceneBuilder` usa `AssetDatabase` para crear carpetas/materiales y
@@ -38,8 +41,9 @@ Notas:
 | `make_infographic.py` | capturas `Antes/legacy` + `Despues` | `GA5-AA4-EV01_Infografia.pptx` |
 | `make_aa4_docx.py` | mismas capturas | `GA5-AA4-EV01_Infografia_Comparativa.docx` (fuente negra, fondo blanco) |
 | `summarize_tests.py` | `Logs/test_results_*.xml` | `Docs/Evidencias/RESULTADO_PRUEBAS.md` |
-| `webgl_play.js` | build WebGL servida | capturas + errores de consola (Playwright) |
+| `webgl_play.js` | `<url> <carpeta_salida>` de una build servida | capturas + errores de consola (`playwright-core`, ver RUNBOOK §5) |
 | `webgl_smoke.js` | build WebGL servida | verificación de carga |
+| `webgl_song_test.js` | `<url> <salida> <canción> [chrome]` | prueba de punta a punta de “TU CANCIÓN” en la build web (selector, análisis, carrera) |
 
 Para PDF: `soffice --headless --convert-to pdf --outdir <dir> <archivo>.docx`.
 
@@ -88,11 +92,15 @@ flatpak run --command=blender org.blender.Blender --background --python <script>
 
 ## 6. Builds y lanzadores
 
-En `SENA/NitroRythm/Builds/`:
+Salida de los builds: `My project/Builds/` (`WebGL/`, `Linux/`, `WebGLDebug/`; no versionada).
+
+Archivo en `SENA/NitroRythm/Builds/`:
 - `NitroRhythm_WebGL_v1.2.zip`, `NitroRhythm_WebGL_v1.3.zip`.
-- `NitroRhythm_Linux_v1.2.zip`, `NitroRhythm_Linux_v1.3.zip`.
+- `NitroRhythm_Linux_v1.2.zip`, `NitroRhythm_Linux_v1.3.zip` (los v1.3 son idénticos en
+  tamaño a los publicados en la release v1.3).
+- `NitroRhythm_WebGL.zip` (2026-10-01, versión antigua).
 - `Jugar_Linux.sh`, `Jugar_NitroRhythm.sh` (lanzadores).
-- `Builds/WebGL/` (salida del build más reciente).
+- `WebGL/`: build del **2026-10-01** (vieja; no usar como referencia).
 
 Release: https://github.com/Jenifrutica/NitroRhythm_v1/releases/tag/v1.3
 
@@ -104,8 +112,10 @@ Release: https://github.com/Jenifrutica/NitroRhythm_v1/releases/tag/v1.3
 | :-- | :-- |
 | **NitroRhythm ▸ Build Prototype Scenes** | Escenas + materiales base |
 | **NitroRhythm ▸ Build WebGL** | Build WebGL |
+| **NitroRhythm ▸ Build Linux** | Build Linux |
+| **NitroRhythm ▸ Ensure Base Materials** | Solo materiales base |
 | **NitroRhythm ▸ Build Font Assets** | Fuentes TMP |
 | **NitroRhythm ▸ Probe Model Alignment** | Medir pilotos |
 | **NitroRhythm ▸ Evidence Capture Tool** | Capturas manuales |
 | **Window ▸ General ▸ Test Runner** | Pruebas |
-| **File ▸ Build Settings** | Build Linux/otros |
+| **File ▸ Build Settings** | Otras plataformas |

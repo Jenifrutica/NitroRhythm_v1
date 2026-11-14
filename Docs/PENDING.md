@@ -10,21 +10,23 @@ es lo que queda para una versión de producción.
 | # | Severidad | Descripción | Dónde | Nota |
 | :-- | :-- | :-- | :-- | :-- |
 | 1 | Media | **Release WebGL no determinista**: dos builds del mismo código pueden diferir; una puede no dibujar 3D. | Build | Probar siempre la build release en navegador (`webgl_play.js`). |
-| 2 | Media | **Pilotos sin animación** (mallas estáticas). | `CharacterDisplay`, gameplay | No hay `Animator`/clips. |
-| 3 | Baja | **Selector de audio externo ausente**: solo `GameSession.AudioTrackPath` (ruta/URL). | `AudioReactiveMusicController` | En WebGL solo URL. |
-| 4 | Baja | `SampleScene.unity` legacy. | `Assets/Scenes` | Se puede eliminar. |
+| 2 | Baja | Pilotos/karts con animación **procedural** (`KartAnimator`), no esquelética: sin brazos/volante ni ruedas que giren (el FBX es una sola malla). | `Player/KartAnimator.cs` | Para más, rigging en Blender + `Animator`. |
+| 3 | Baja | La canción del jugador se reproduce en **mono** (y a 32 kHz en web) para ahorrar memoria. El BPM supone tempo constante (70–180). | `UserSong`, `SongLoader` | Aceptable para el prototipo. |
+| 4 | Baja | `SampleScene.unity` legacy y restos de la plantilla URP (`TutorialInfo`, `Readme.asset`, `SampleSceneProfile`, carpetas vacías). | `Assets/` | Se puede eliminar (ver `ASSETS.md` §12). |
 | 5 | Baja | Código muerto: `GameModeManager` (solo por el enum `GameMode`), `ObstacleLauncher` (no enganchado). | `Core`, `Combat` | Limpiar o documentar. |
 | 6 | Baja | El estado “antes” de las capturas es **simulado** (proto de cubos). | `Docs/Capturas/Antes/legacy` | No había capturas del original. |
 | 7 | Baja | Respuestas del Forms son **simuladas** (enviadas por script). | `Docs/Analitica` | Si se quieren reales: limpiar respuestas y repetir. |
 | 8 | Baja | `pilotOffset` por personaje es empírico. | `prototype_data.json` | Ajustar si cambian los modelos. |
+| 9 | — | ~~Pruebas sin re-verificar~~ → re-ejecutadas el 2026-11-14: 58 OK, 0 fallos. | `RESULTADO_PRUEBAS.md` | Resuelto. |
+| 10 | Baja | `webgl_play.js` dependía de `~/Proyectos/legato/node_modules`, que ya no existe. | `Docs/Tools/docs` | Instalar `playwright-core` (RUNBOOK §5). |
 
 ---
 
 ## 2. Backlog técnico (priorizado)
 
 ### Alta
-1. **Animación de pilotos/karts** (idle, giro, salto) con Animator o Tweens.
-2. **UI de selección de música**: cargar archivo/URL y pre-analizar antes de correr.
+1. ~~Animación de pilotos/karts~~ → hecho de forma procedural (2026-11-13); falta rig esquelético.
+2. ~~UI de selección de música~~ → hecho: “TU CANCIÓN” (web + escritorio, 2026-11-13).
 3. **Determinismo del build WebGL**: fijar pipeline de build reproducible y smoke test
    automático en CI antes de publicar.
 
@@ -49,10 +51,13 @@ es lo que queda para una versión de producción.
 
 - **AA1**: subir `Entregas/GA5-AA1-EV01/` (cuestionario + analítica).
 - **AA2**: subir `Entregas/GA5-AA2-EV01/` (informe).
-- **AA3**: comprimir `Entregas/GA5-AA3-EV01/` y subir.
+- **AA3**: subir `AA3-Ajustes_Unity.zip` (ya comprimido). Nota: `Entregas/GA5-AA3-EV01/`
+  incluye también el PDF del informe AA2; quitarlo si no corresponde.
 - **AA4**: pegar el enlace de Canva (`https://canva.link/j1aecdvqxvhjluh`) y subir el PDF.
 
-ZIPs finales ya generados en `Downloads/Evidencias_GA5_NitroRhythm/`.
+ZIPs finales ya generados en `Downloads/Evidencias_GA5_NitroRhythm/`. Allí hay además
+dos carpetas sueltas `AA4-Infografia` y `AA4-Infografia (2)` (descomprimidas/duplicadas):
+revisar antes de subir para no adjuntar la equivocada.
 
 ---
 
@@ -62,7 +67,8 @@ ZIPs finales ya generados en `Downloads/Evidencias_GA5_NitroRhythm/`.
   `AGENT_CONTEXT.md`.
 - `Docs/PENDIENTE_PROXIMA_SESION.md` está **obsoleto** (describía un bloqueo ya
   resuelto); se conserva solo como registro. No usarlo como estado actual.
-- Regenerar `.docx/.pdf` si se editan los `.md`.
+- Regenerar `.docx/.pdf` si se editan los `.md`, incluidas las copias de
+  `SENA/NitroRythm/Entregas/Documentacion_Tecnica/`.
 
 ---
 

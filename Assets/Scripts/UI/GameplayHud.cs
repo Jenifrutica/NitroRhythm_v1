@@ -26,6 +26,8 @@ namespace NitroRhythm.UI
         private TextMeshProUGUI _waitingText, _checkpointToast, _impactToast, _impactSub;
         private TextMeshProUGUI _reviveP1, _reviveP2;
         private Image _speedRing, _beatRing, _beatLine;
+        private Image _speedRing2, _beatRing2;
+        private TextMeshProUGUI _speedText2;
         private NeonBar _p1Health, _p2Health, _progress, _turboBar, _slowBar;
         private TextMeshProUGUI _p1HealthText, _p2HealthText;
         private GameObject _p2Row, _turboChip, _slowChip;
@@ -159,7 +161,11 @@ namespace NitroRhythm.UI
             BuildTopLeft();
             BuildTopCenter();
             BuildTopRight();
-            BuildSpeedometer();
+            BuildSpeedometer(false, out _speedRing, out _speedText, out _beatRing, UIFactory.NeonCyan);
+            if (TestSceneBootstrapper.Instance != null && TestSceneBootstrapper.Instance.CurrentMode == GameMode.TwoPlayerCoop)
+            {
+                BuildSpeedometer(true, out _speedRing2, out _speedText2, out _beatRing2, new Color(0.45f, 0.6f, 1f));
+            }
             BuildProgress();
             BuildChips();
             BuildToasts();
@@ -210,36 +216,55 @@ namespace NitroRhythm.UI
             Text(rowObject.transform, label, 24f, tag, new Vector2(-176f, 0f), new Vector2(50f, 30f), TextAlignmentOptions.Left, true);
             Icon(rowObject.transform, UIIcons.Heart, 28f, UIFactory.NeonRed, new Vector2(-124f, 0f));
             bar = UIFactory.CreateNeonBar(rowObject.transform, "Bar", UIFactory.NeonGreen, new Vector2(190f, 20f), new Vector2(20f, 0f));
-            value = Text(rowObject.transform, "100", 26f, Color.white, new Vector2(158f, 0f), new Vector2(70f, 30f), TextAlignmentOptions.Right);
+            value = Text(rowObject.transform, "100", 26f, Color.white, new Vector2(143f, 0f), new Vector2(100f, 30f), TextAlignmentOptions.Right);
         }
 
-        private void BuildSpeedometer()
+        /// <summary>
+        /// Speed gauge. P1's sits bottom-left; in co-op P2 gets a mirrored one bottom-right of its own
+        /// half (before, only P1 had a speedometer).
+        /// </summary>
+        private void BuildSpeedometer(bool rightSide, out Image speedRing, out TextMeshProUGUI speedText, out Image beatRing, Color tint)
         {
-            GameObject beat = new GameObject("BeatRing", typeof(Image));
-            beat.transform.SetParent(_canvas.transform, false);
-            _beatRing = beat.GetComponent<Image>();
-            _beatRing.sprite = UIFactory.RingSprite;
-            _beatRing.color = new Color(_accent.r, _accent.g, _accent.b, 0.25f);
-            _beatRing.raycastTarget = false;
-            Place(_beatRing.rectTransform, new Vector2(0f, 0f), new Vector2(40f, 40f), new Vector2(330f, 330f));
-            _beatRing.rectTransform.pivot = new Vector2(0f, 0f);
+            GameObject container = new GameObject(rightSide ? "SpeedometerP2" : "SpeedometerP1", typeof(RectTransform));
+            container.transform.SetParent(_canvas.transform, false);
+            RectTransform box = (RectTransform)container.transform;
+            box.anchorMin = box.anchorMax = box.pivot = rightSide ? new Vector2(1f, 0f) : Vector2.zero;
+            box.sizeDelta = new Vector2(420f, 420f);
+            box.anchoredPosition = Vector2.zero;
+            Transform root = container.transform;
 
-            Image disc = UIFactory.CreatePanel(_canvas.transform, "SpeedDisc", new Color(0.03f, 0.04f, 0.1f, 0.72f), Vector2.zero, Vector2.zero, Vector2.zero, Vector2.zero);
+            GameObject beat = new GameObject("BeatRing", typeof(Image));
+            beat.transform.SetParent(root, false);
+            beatRing = beat.GetComponent<Image>();
+            beatRing.sprite = UIFactory.RingSprite;
+            beatRing.color = new Color(_accent.r, _accent.g, _accent.b, 0.25f);
+            beatRing.raycastTarget = false;
+            Place(beatRing.rectTransform, new Vector2(0f, 0f), new Vector2(40f, 40f), new Vector2(330f, 330f));
+            beatRing.rectTransform.pivot = new Vector2(0f, 0f);
+
+            Image disc = UIFactory.CreatePanel(root, "SpeedDisc", new Color(0.03f, 0.04f, 0.1f, 0.72f), Vector2.zero, Vector2.zero, Vector2.zero, Vector2.zero);
             disc.sprite = UIFactory.CircleSprite;
             disc.raycastTarget = false;
             Place(disc.rectTransform, new Vector2(0f, 0f), new Vector2(60f, 60f), new Vector2(290f, 290f));
 
-            Image back = UIFactory.CreateRadialGauge(_canvas.transform, "SpeedRingBack", new Color(0.12f, 0.16f, 0.3f, 0.9f), new Vector2(205f, 205f), new Vector2(290f, 290f));
+            Image back = UIFactory.CreateRadialGauge(root, "SpeedRingBack", new Color(0.12f, 0.16f, 0.3f, 0.9f), new Vector2(205f, 205f), new Vector2(290f, 290f));
             back.fillAmount = 1f;
-            _speedRing = UIFactory.CreateRadialGauge(_canvas.transform, "SpeedRing", UIFactory.NeonCyan, new Vector2(205f, 205f), new Vector2(290f, 290f));
+            speedRing = UIFactory.CreateRadialGauge(root, "SpeedRing", tint, new Vector2(205f, 205f), new Vector2(290f, 290f));
 
-            _speedText = UIFactory.CreateNumber(_canvas.transform, "Speed", "0", 84f, Color.white, UIFactory.NeonCyan);
-            Place(_speedText.rectTransform, new Vector2(0f, 0f), new Vector2(205f, 215f), new Vector2(240f, 80f));
-            _speedText.rectTransform.pivot = new Vector2(0.5f, 0.5f);
+            speedText = UIFactory.CreateNumber(root, "Speed", "0", 84f, Color.white, tint);
+            Place(speedText.rectTransform, new Vector2(0f, 0f), new Vector2(205f, 215f), new Vector2(240f, 80f));
+            speedText.rectTransform.pivot = new Vector2(0.5f, 0.5f);
 
-            TextMeshProUGUI unit = UIFactory.CreateLabel(_canvas.transform, "Unit", "KM/H", 24f, UIFactory.TextSoft);
+            TextMeshProUGUI unit = UIFactory.CreateLabel(root, "Unit", "KM/H", 24f, UIFactory.TextSoft);
             Place(unit.rectTransform, new Vector2(0f, 0f), new Vector2(205f, 160f), new Vector2(200f, 30f));
             unit.rectTransform.pivot = new Vector2(0.5f, 0.5f);
+
+            if (rightSide)
+            {
+                TextMeshProUGUI tag = UIFactory.CreateLabel(root, "Tag", "P2", 30f, tint);
+                Place(tag.rectTransform, new Vector2(0f, 0f), new Vector2(205f, 112f), new Vector2(120f, 34f));
+                tag.rectTransform.pivot = new Vector2(0.5f, 0.5f);
+            }
         }
 
         private void BuildProgress()
@@ -351,9 +376,12 @@ namespace NitroRhythm.UI
             _scoreText.text = Mathf.FloorToInt(_score).ToString("D6");
             if (GameSession.Instance != null) GameSession.Instance.LastScore = Mathf.FloorToInt(_score);
 
-            _speedRing.fillAmount = Mathf.Lerp(_speedRing.fillAmount, Mathf.Clamp01(speed / maxSpeed), 1f - Mathf.Exp(-10f * Time.unscaledDeltaTime));
-            _speedText.text = Mathf.RoundToInt(speed * 3.6f).ToString();
-            _speedRing.color = Color.Lerp(UIFactory.NeonCyan, UIFactory.NeonGold, Mathf.Clamp01((speed / maxSpeed - 0.6f) * 2.5f));
+            UpdateGauge(_speedRing, _speedText, speed, maxSpeed, UIFactory.NeonCyan);
+            if (_speedRing2 != null && boot != null && boot.Player2 != null)
+            {
+                PlayerKartController kart2 = boot.Player2.GetComponent<PlayerKartController>();
+                UpdateGauge(_speedRing2, _speedText2, kart2 != null ? Mathf.Abs(kart2.CurrentSpeed) : 0f, maxSpeed, new Color(0.45f, 0.6f, 1f));
+            }
 
             _elapsed += Time.deltaTime;
             _timerText.text = FormatTime(_elapsed);
@@ -375,8 +403,20 @@ namespace NitroRhythm.UI
                 _pulse = Mathf.Lerp(_pulse, bass, Time.deltaTime * 10f);
                 _beatRing.rectTransform.localScale = Vector3.one * (1f + _pulse * 0.1f);
                 _beatRing.color = new Color(_accent.r, _accent.g, _accent.b, 0.15f + _pulse * 0.5f);
+                if (_beatRing2 != null)
+                {
+                    _beatRing2.rectTransform.localScale = _beatRing.rectTransform.localScale;
+                    _beatRing2.color = _beatRing.color;
+                }
                 _beatLine.color = new Color(_accent.r, _accent.g, _accent.b, 0.15f + _pulse * 0.6f);
             }
+        }
+
+        private static void UpdateGauge(Image ring, TextMeshProUGUI text, float speed, float maxSpeed, Color baseColor)
+        {
+            ring.fillAmount = Mathf.Lerp(ring.fillAmount, Mathf.Clamp01(speed / maxSpeed), 1f - Mathf.Exp(-10f * Time.unscaledDeltaTime));
+            text.text = Mathf.RoundToInt(speed * 3.6f).ToString();
+            ring.color = Color.Lerp(baseColor, UIFactory.NeonGold, Mathf.Clamp01((speed / maxSpeed - 0.6f) * 2.5f));
         }
 
         private void UpdateLevelAndProgress()
@@ -464,7 +504,16 @@ namespace NitroRhythm.UI
             Color healthy = fraction > 0.5f ? UIFactory.NeonGreen : (fraction > 0.25f ? UIFactory.NeonGold : UIFactory.NeonRed);
             if (flash && _healthFlashTimer > 0f) healthy = Color.Lerp(healthy, Color.white, Mathf.Clamp01(_healthFlashTimer / 0.8f));
             bar.SetColor(healthy);
-            text.text = Mathf.CeilToInt(health.Health).ToString();
+            // Down: say so instead of a bare "0", blinking until the revive.
+            if (health.IsDown)
+            {
+                text.text = $"K.O. {Mathf.CeilToInt(health.ReviveTimeLeft)}";
+                bar.SetColor(Mathf.Repeat(Time.unscaledTime * 3f, 1f) < 0.5f ? UIFactory.NeonRed : new Color(0.4f, 0.05f, 0.08f));
+            }
+            else
+            {
+                text.text = Mathf.CeilToInt(health.Health).ToString();
+            }
         }
 
         private void UpdatePosition()

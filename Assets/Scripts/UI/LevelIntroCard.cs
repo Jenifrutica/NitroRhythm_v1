@@ -106,7 +106,17 @@ namespace NitroRhythm.UI
             CenterPlace(description.rectTransform, new Vector2(-910f, -112f), new Vector2(780f, 190f), 0f);
             _animated.Add(description.rectTransform);
 
-            if (def != null && !string.IsNullOrEmpty(def.musicHint))
+            // With a player song, the chip tells which part of the song this domain races.
+            string musicHint = def != null ? def.musicHint : null;
+            GameSession songSession = GameSession.Instance;
+            if (songSession != null && songSession.HasUserSong)
+            {
+                NitroRhythm.Audio.UserSong song = songSession.UserSong;
+                song.GetSectionTime(number - 1, total, out float sectionStart, out float sectionLength);
+                musicHint = $"Tramo {number}/{total} de «{song.Name}» · {NitroRhythm.Audio.UserSong.FormatTime(sectionStart)}–{NitroRhythm.Audio.UserSong.FormatTime(sectionStart + sectionLength)}";
+            }
+
+            if (!string.IsNullOrEmpty(musicHint))
             {
                 Image chip = UIFactory.CreatePanel(canvas.transform, "MusicChip", new Color(accent.r * 0.25f, accent.g * 0.25f, accent.b * 0.25f, 0.95f), Vector2.zero, Vector2.zero, Vector2.zero, Vector2.zero);
                 chip.sprite = UIFactory.RoundedSprite;
@@ -116,11 +126,13 @@ namespace NitroRhythm.UI
                 TextMeshProUGUI icon = UIFactory.CreateIcon(chip.transform, UIIcons.Music, 38f, accent);
                 icon.rectTransform.anchorMin = icon.rectTransform.anchorMax = new Vector2(0f, 0.5f);
                 icon.rectTransform.anchoredPosition = new Vector2(44f, 0f);
-                TextMeshProUGUI hint = UIFactory.CreateLabel(chip.transform, "MusicHint", def.musicHint, 30f, Color.white, TextAlignmentOptions.Left);
+                TextMeshProUGUI hint = UIFactory.CreateLabel(chip.transform, "MusicHint", musicHint, 30f, Color.white, TextAlignmentOptions.Left);
                 hint.rectTransform.anchorMin = Vector2.zero;
                 hint.rectTransform.anchorMax = Vector2.one;
                 hint.rectTransform.offsetMin = new Vector2(86f, 0f);
                 hint.rectTransform.offsetMax = new Vector2(-16f, 0f);
+                hint.enableWordWrapping = false;
+                hint.overflowMode = TextOverflowModes.Ellipsis;
                 _animated.Add(chip.rectTransform);
             }
 

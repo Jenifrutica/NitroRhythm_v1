@@ -41,6 +41,33 @@ namespace NitroRhythm.Audio
             return Mathf.Clamp01(value / (averageEnergy * 2.5f));
         }
 
+        /// <summary>
+        /// A beat range of this analysis as its own result (same BPM and same loudness reference, so a
+        /// loud section of a song still builds a harder track than a quiet one).
+        /// </summary>
+        public AudioAnalysisResult Slice(int startBeat, int count)
+        {
+            if (!IsValid) return CreateFlat(bpm);
+            startBeat = Mathf.Clamp(startBeat, 0, beatCount - 1);
+            count = Mathf.Clamp(count, 1, beatCount - startBeat);
+
+            AudioAnalysisResult result = new AudioAnalysisResult
+            {
+                bpm = bpm,
+                beatCount = count,
+                duration = count * SecondsPerBeat,
+                averageEnergy = averageEnergy,
+                beatEnergy = new float[count],
+                bassEnergy = new float[count],
+                trebleEnergy = new float[count]
+            };
+
+            Array.Copy(beatEnergy, startBeat, result.beatEnergy, 0, count);
+            Array.Copy(bassEnergy, startBeat, result.bassEnergy, 0, count);
+            Array.Copy(trebleEnergy, startBeat, result.trebleEnergy, 0, count);
+            return result;
+        }
+
         public static AudioAnalysisResult CreateFlat(float bpm = 120f, int beats = 64, float energy = 0.3f)
         {
             AudioAnalysisResult result = new AudioAnalysisResult

@@ -67,6 +67,11 @@ tiene su propia paleta, dificultad y pista generada a partir de la música.
   marca en el suelo dónde caerá cada proyectil y apunta a donde estará el jugador; daño por área, −15 % de vida y
   −40 % de velocidad por 3 s. Si te quedas sin vida, K.O.: vuelves al checkpoint con la vida llena.
 - **Cooperación**: ambos héroes deben cruzar la meta ("Esperando a…").
+- **Tu canción** (ronda 5): en la selección de piloto, *TU CANCIÓN* carga un audio local (web: selector del
+  navegador, MP3/WAV/OGG/M4A/FLAC; Linux: explorador propio, MP3/OGG/WAV/AIFF). La canción se reparte en los
+  7 dominios y cada pista se genera de su tramo (graves → saltos, agudos → obstáculos, BPM → ritmo y ataques).
+- **Animación y ambiente** (ronda 5): karts y pilotos se inclinan, cabecean, se aplastan al aterrizar y giran en
+  el K.O.; muros-ecualizador, luz y bordes de la pista laten con la música; cámara con mirada adelantada y FOV dinámico.
 
 ### Generación reactiva al audio
 `AudioAnalysisService` analiza el clip (FFT ligera offline → **BPM**, energía,
@@ -110,7 +115,7 @@ por lo que la demo funciona siempre (incluso en WebGL).
 - **Unity 6000.5.8f1** (URP 17).
 - **Input System** + backend legacy (para WebGL).
 - **TextMeshPro** (UI Canvas).
-- **Unity Test Framework** (NUnit) — 40 pruebas automáticas (36 PlayMode + 4 EditMode).
+- **Unity Test Framework** (NUnit) — 73 pruebas automáticas (69 PlayMode, de ellas 11 generadores de capturas, + 4 EditMode).
 - **Blender 5.2** (bpy) para generar/exportar modelos.
 
 ---
@@ -137,7 +142,7 @@ Assets/
     Player/       PlayerKartController, salud/velocidad, bot
     UI/           UIFactory + menú, selección 3D, opciones, pausa, HUD, resultados
   Tests/
-    PlayMode/     36 pruebas de sistemas en ejecución (+ 5 generadores de capturas)
+    PlayMode/     58 pruebas de sistemas en ejecución (+ 11 generadores de capturas)
     EditMode/     4 pruebas de escenas/recursos
 Tools/            Scripts de Blender (modelos) y de documentos
 ```
@@ -166,7 +171,7 @@ funciona en cualquier hosting estático).
 # O por línea de comandos:
 Unity -batchmode -runTests -testPlatform PlayMode -projectPath <ruta>
 ```
-Resultado actual: **40/40 en verde** (detalle en [`Docs/Evidencias/RESULTADO_PRUEBAS.md`](Docs/Evidencias/RESULTADO_PRUEBAS.md)).
+Resultado actual: **62/62 en verde** (58 PlayMode + 4 EditMode; 11 generadores omitidos) (detalle en [`Docs/Evidencias/RESULTADO_PRUEBAS.md`](Docs/Evidencias/RESULTADO_PRUEBAS.md)).
 
 ### Regenerar modelos (Blender)
 ```bash
@@ -217,7 +222,8 @@ cd NitroRhythm && python3 -m http.server 8080
 - [x] Audio reactivo, 4 modos, combate, checkpoints.
 - [x] Narrativa data-driven y 10 dominios.
 - [x] Modelos 3D texturizados + post-proceso neón.
-- [x] 40/40 pruebas automatizadas.
+- [x] 62/62 pruebas automatizadas en verde.
+- [x] Canciones locales del jugador (web y Linux): la pista se arma con la canción.
 - [x] HUD ampliado, checkpoints visibles, feedback de impacto y SFX (hallazgos P4, P6 y P9).
 - [x] Build WebGL publicable.
 

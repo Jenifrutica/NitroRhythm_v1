@@ -2,6 +2,33 @@
 
 Historial de rondas de desarrollo. Fechas del entorno de trabajo.
 
+## Ronda 5 — Tu canción, animación y ambientación (2026-11-13)
+
+- **Canciones locales**: botón “TU CANCIÓN” en la selección. Web: selector del navegador
+  (MP3/WAV/OGG/M4A/FLAC, decodificado por WebAudio vía `NitroSongPicker.jslib`); Linux/Editor:
+  explorador de archivos propio (MP3/OGG/WAV/AIFF). La canción se reparte en los 7 dominios
+  (un tramo consecutivo por pantalla) y cada pista se genera de su tramo; el villano ataca a su BPM.
+- Análisis: muestras sin `AudioClip`, mezcla real a mono, BPM con precisión sub-frame,
+  rejilla de pulsos sin deriva; el generador usa el tramo completo (agrupa pulsos).
+- **Animación procedural** de kart y piloto (`KartAnimator`) y salto con giro en el garaje.
+- **Ambientación**: muros-ecualizador reactivos al espectro, luz/bloom que laten con los
+  graves, bordes de pista que destellan al compás.
+- **Corrección**: `UIHoverEffect` repintaba los botones con su color inicial y borraba la
+  selección (modo de juego, P1/P2 no se marcaban).
+- **Pruebas**: 69 PlayMode (58 OK, 11 omitidas) + 4 EditMode, 0 fallos. Las pruebas de flujo
+  saltan la guía del primer nivel (añadida el 2026-10-05), que las dejaba esperando en pausa.
+- **Interfaz/cámara**: velocímetro de P2 en cooperativo, “K.O. n” en la barra de vida,
+  cámara con mirada adelantada (menos vacío bajo la pista) y FOV dinámico, tramo de la
+  canción en la tarjeta del dominio, canción en Resultados.
+
+## Revisión de documentación (2026-11-13)
+
+- Documentos de handoff auditados contra el código: cifras de pruebas unificadas,
+  menús de Editor completos (Build Linux, Ensure Base Materials, WebGLDebug), rutas de
+  builds aclaradas, `webgl_play.js` con dependencia y argumentos, correa del villano,
+  `PremioMalo` como respaldo y restos de plantilla inventariados.
+- Licencia de Unity renovada; pruebas re-ejecutadas en la ronda 5.
+
 ---
 
 ## Ronda 4 — Prueba con usuarios y cierre de evidencias (2026-10-05/06)
@@ -27,7 +54,8 @@ Historial de rondas de desarrollo. Fechas del entorno de trabajo.
 - Selección con insignias de jugador; `LayoutStage` escala los karts con las tarjetas.
 - `ControlsGuide`, `ControlsOverlay`, pausa rediseñada; P3 salta con `U`.
 - Lyra más grande/centrada; retratos con esquinas redondeadas; botones sin barra.
-- 37 PlayMode + 4 EditMode en verde; build v1.3 verificada en navegador.
+- Pruebas en verde (última ejecución completa: 51 PlayMode → 42 OK + 9 omitidas,
+  4 EditMode); build v1.3 verificada en navegador.
 
 ## Ronda 2 — Mundo temático y UI nueva (2026-10-04)
 

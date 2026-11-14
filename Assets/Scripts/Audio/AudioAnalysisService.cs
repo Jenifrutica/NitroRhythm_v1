@@ -31,6 +31,24 @@ namespace NitroRhythm.Audio
                 return AudioAnalysisResult.CreateFlat();
             }
 
+            return AnalyzeSamples(raw, channels, sampleRate);
+        }
+
+        /// <summary>
+        /// Analyses raw PCM (interleaved when <paramref name="channels"/> &gt; 1, mixed down to mono).
+        /// Pure math (no Unity objects), so it can run on a worker thread and on user songs that
+        /// never become a full-length AudioClip (WebGL decodes them in the browser).
+        /// </summary>
+        public static AudioAnalysisResult AnalyzeSamples(float[] raw, int channels, int sampleRate)
+        {
+            channels = Mathf.Max(1, channels);
+            sampleRate = Mathf.Max(1, sampleRate);
+            if (raw == null || raw.Length < channels)
+            {
+                return AudioAnalysisResult.CreateFlat();
+            }
+
+            float channelScale = 1f / channels;
             int hop = Mathf.Max(1, sampleRate / EnvelopeFps);
             int frameCount = Mathf.Max(1, raw.Length / (hop * channels));
 
@@ -53,7 +71,9 @@ namespace NitroRhythm.Audio
 
                 for (int i = start; i < end; i += channels)
                 {
-                    float sample = raw[i]; // mono mix-down (channel 0)
+                    float sample = raw[i];
+                    for (int c = 1; c < channels && i + c < raw.Length; c++) sample += raw[i + c];
+                    sample *= channelScale; // mono mix-down
                     lowPass += (sample - lowPass) * alpha;
 
                     float low = lowPass;
@@ -76,7 +96,7 @@ namespace NitroRhythm.Audio
             AudioAnalysisResult result = new AudioAnalysisResult
             {
                 bpm = bpm,
-                duration = clip.length
+                duration = (float)(raw.Length / channels) / sampleRate
             };
 
             Aggregate(result, env, bass, treble, bpm, EnvelopeFps);
@@ -119,12 +139,33 @@ namespace NitroRhythm.Audio
                 return 120f;
             }
 
-            float bpm = 60f * fps / bestLag;
+            // Sub-frame precision: fit a parabola through the scores around the best lag, so e.g.
+            // 128 BPM (23.4 frames) is not rounded to 130 BPM and the beat grid does not drift.
+            float lagF = bestLag;
+            if (bestLag > minLag && bestLag + 1 < onset.Length)
+            {
+                float left = Autocorrelation(onset, bestLag - 1);
+                float right = Autocorrelation(onset, bestLag + 1);
+                float denominator = left - 2f * bestScore + right;
+                if (Mathf.Abs(denominator) > 1e-9f)
+                {
+                    lagF += Mathf.Clamp(0.5f * (left - right) / denominator, -0.5f, 0.5f);
+                }
+            }
+
+            float bpm = 60f * fps / lagF;
 
             // Fold into the musically plausible 70..180 range.
             while (bpm < 70f) bpm *= 2f;
             while (bpm > 180f) bpm *= 0.5f;
             return bpm;
+        }
+
+        private static float Autocorrelation(float[] onset, int lag)
+        {
+            float score = 0f;
+            for (int i = lag; i < onset.Length; i++) score += onset[i] * onset[i - lag];
+            return score;
         }
 
         private static void Aggregate(
@@ -133,8 +174,8 @@ namespace NitroRhythm.Audio
             float bpm, int fps)
         {
             float secondsPerBeat = 60f / Mathf.Max(1f, bpm);
-            int framesPerBeat = Mathf.Max(1, Mathf.RoundToInt(secondsPerBeat * fps));
-            int beats = Mathf.Max(1, env.Length / framesPerBeat);
+            float framesPerBeat = Mathf.Max(1f, secondsPerBeat * fps);
+            int beats = Mathf.Max(1, Mathf.FloorToInt(env.Length / framesPerBeat));
 
             float[] beatEnergy = new float[beats];
             float[] bassEnergy = new float[beats];
@@ -144,8 +185,9 @@ namespace NitroRhythm.Audio
 
             for (int beat = 0; beat < beats; beat++)
             {
-                int start = beat * framesPerBeat;
-                int end = Mathf.Min(start + framesPerBeat, env.Length);
+                // Fractional beat boundaries keep the grid locked to the tempo over long songs.
+                int start = Mathf.RoundToInt(beat * framesPerBeat);
+                int end = Mathf.Min(Mathf.Max(start + 1, Mathf.RoundToInt((beat + 1) * framesPerBeat)), env.Length);
 
                 float eSum = 0f, bSum = 0f, tSum = 0f;
                 int n = 0;

@@ -88,7 +88,14 @@ VillainBoss.RepositionToLevel(...)
 - Envolvente de energía + autocorrelación de onsets → **BPM**.
 - Agrega energía por pulso (`beatEnergy`, `bassEnergy`, `trebleEnergy`).
 
+`AudioAnalysisService.AnalyzeSamples(pcm, channels, rate)` hace lo mismo sobre muestras
+sueltas (sin `AudioClip`): lo usan las canciones del jugador y puede correr en un hilo.
+El BPM se afina con interpolación parabólica y los pulsos se agregan con límites
+fraccionarios, así la rejilla no se desfasa en canciones largas.
+
 `ProceduralTrackBuilder.Build(analysis, levelDef, startX)`:
+- Hasta 48 segmentos; si el tramo tiene más pulsos, cada segmento agrupa varios
+  (máximo de graves/agudos del grupo) para que **todo** el tramo dé forma a la pista.
 - `bass > 0.45` → hueco grande + jump pad/ramp.
 - `treble > 0.35/0.5/0.7` → spinner / moving hazard / barrier.
 - BPM → espaciado y `speedMultiplier`.
@@ -117,6 +124,14 @@ VillainBoss.RepositionToLevel(...)
 | `SfxPlayer` | Pool de `AudioSource` 2D, aplica `GameSession.SfxVolume`. |
 | `AudioReactiveMusicController` | Carga clip (ruta/URL o generado), analiza, reproduce, expone `Bass/Treble/Energy`. |
 | `EngineSound` | Bucle de motor con pitch/volumen según velocidad. |
+| `UserSong` | Canción del jugador: PCM mono + análisis completo; la divide en **un tramo por dominio** (alineado a pulsos, mínimo 24 s; en canciones cortas los tramos se solapan) y crea el clip de cada tramo con fundidos. |
+| `SongLoader` | Carga la canción: WebGL → selector del navegador (`Assets/Plugins/WebGL/NitroSongPicker.jslib`, decodifica con WebAudio a mono 32 kHz); escritorio/Editor → `UnityWebRequestMultimedia` (MP3/OGG/WAV/AIFF). Analiza en un hilo (salvo WebGL). Máx. 8 min, mín. 15 s. |
+
+**Canción del jugador en la campaña:** `GameSession.UserSong` persiste entre escenas.
+`AudioReactiveMusicController` usa, en el dominio *n* de 7, `UserSong.CreateSectionClip(n)`
+y `SectionAnalysis(n)`: el dominio 1 corre el inicio de la canción y el 7 el final.
+Sin canción, cada dominio usa su música sintetizada (`DomainMusic`). `GameSession.AudioTrackPath`
+sigue funcionando como entrada heredada/pruebas (se carga como `UserSong`).
 
 Los SFX y la música son **procedurales** para que funcionen en WebGL sin assets de audio.
 
@@ -125,7 +140,8 @@ Los SFX y la música son **procedurales** para que funcionen en WebGL sin assets
 ## 6. Combate
 
 - `VillainBoss`:
-  - IA: corre por delante, mantiene **correa** de distancia (18–38 m), ataca cada
+  - IA: corre por delante, mantiene **correa** de distancia (objetivo 26 m, frena por
+    encima de 38 m, se teletransporta a > 70 m o si queda 10 m por detrás), ataca cada
     2 pulsos, 4 tipos (directo, ráfaga, mina, barrera), telegrafía en el suelo.
   - Jugador (P3): `IJKL`, salto `U`, ataque `Enter`.
   - `FiringPoint` desde `KartAnchors`.
@@ -149,6 +165,14 @@ Los SFX y la música son **procedurales** para que funcionen en WebGL sin assets
   - `ApplySpeedBoost`, `CurrentSpeed`.
 - `BotKartAI`: throttle 1, centra el rumbo, detecta huecos **por delante** y salta.
 - `EngineSound`: pitch/volumen por velocidad.
+- `KartAnimator` (instalado por `VisualEntityFactory.CreateKartEntity`): animación procedural
+  de kart y piloto (los FBX no tienen huesos): alabeo en curvas, cabeceo al acelerar/saltar,
+  rebote de suspensión, estirar/aplastar al despegar/aterrizar, temblor al recibir golpe,
+  trompo en K.O., piloto que se inclina y mira hacia la curva y “respira” parado.
+  Los modelos cuelgan de `AnimRig` (escala inversa del collider) → `AnimPivot`, para rotar sin
+  cizalla; por eso las pruebas buscan `*_Visual`/`*_Pilot` en profundidad.
+- `CameraFollow`: mira 7 m por delante del kart (`LookAhead`) y abre el FOV con la velocidad
+  y el turbo (`DynamicFov`).
 
 ---
 
@@ -165,6 +189,9 @@ Los SFX y la música son **procedurales** para que funcionen en WebGL sin assets
 - `PropAnimator`: giro, bob, deriva y pulso reactivo al bajo.
 - `DomainParticles` / `ParticleFollow`: volumen de partículas que sigue al líder.
 - `HazardVisuals`: builders temáticos de hazards/pads/portal con colliders correctos.
+- `MusicVisualizer`: dos muros-ecualizador (30 barras por lado, bandas logarítmicas del
+  espectro en vivo) que siguen al líder; la luz principal y el bloom laten con los graves y
+  las tiras de neón del borde de la pista destellan con cada golpe.
 - `PrizePickup`: premio recogible → turbo temporal.
 
 ---
@@ -176,9 +203,15 @@ Los SFX y la música son **procedurales** para que funcionen en WebGL sin assets
   tarjetas, botones, sliders, gauge radial; fuente TMP con fallback.
 - `UIArt`: carga retratos/ilustraciones desde `Resources`.
 - `MainMenuScreen`: stage 3D + menú + opciones + música.
-- `CharacterSelectScreen`: garaje 3D, tarjetas, P1/P2, 4 modos, guía.
+- `CharacterSelectScreen`: garaje 3D, tarjetas, P1/P2, 4 modos, guía, botón **TU CANCIÓN**
+  y etiqueta de la música elegida. Al elegir piloto, el kart da un salto con giro.
+- `SongPickerPanel`: panel “TU CANCIÓN” (web: selector del navegador; escritorio: explorador
+  de archivos propio con accesos a Música/Descargas/Inicio, lee `user-dirs.dirs`).
 - `GameplayHud`: puntuación, dominio, tiempo, posición, distancia al villano,
-  vida P1/P2, potenciadores, avisos, cuenta regresiva, progreso con checkpoints.
+  vida P1/P2 (muestra “K.O. n” parpadeando), potenciadores, avisos, cuenta regresiva,
+  progreso con checkpoints. En cooperativo P2 tiene su propio velocímetro (abajo a la derecha).
+- `LevelIntroCard`: con canción del jugador, el chip musical indica “Tramo n/7 de «…» · m:ss–m:ss”.
+- `ResultsScreen`: el subtítulo nombra la canción si se usó una.
 - `LevelIntroCard`: tarjeta por dominio (se muestra al iniciar cada pantalla).
 - `ControlsGuide` / `ControlsOverlay`: guía por modo.
 - `PauseMenu`, `ResultsScreen` (rango S/A/B/C), `ScreenFader`, `UIAmbient`, `UIHoverEffect`.
@@ -221,6 +254,8 @@ Los SFX y la música son **procedurales** para que funcionen en WebGL sin assets
 | `GameplayFlowTests` | Escena real: kart conduce, cámara sigue, una cámara/AudioListener. |
 | `CharacterDisplayAlignmentTests` | Pilotos centrados/sentados (3 personajes). |
 | `GameplayEvidenceCapture` / `LegacyEvidenceCapture` | Capturas (solo con `NITRO_SHOT_DIR`). |
+| `UserSongTests` | Análisis de muestras, mono, tramos (orden, solape, longitud), clip del tramo, controlador con canción, carga de WAV y MP3 reales. |
+| `AnimationAndAmbienceTests` | Rig sin cizalla, alabeo en curvas, aplastamiento al aterrizar, muros-ecualizador. |
 | `SceneSetupTests` (EditMode) | 4 escenas, Build Settings, JSON, modelos importados. |
 
 ---
@@ -231,8 +266,8 @@ Los SFX y la música son **procedurales** para que funcionen en WebGL sin assets
   props, partículas) + `outro_<id>` y ajustar `DomainMusic`/`AmbientBed`.
 - **Nuevo personaje**: `CharacterDefinition` + modelos/textura + `pilotOffset`.
 - **Nuevo modo**: `GameMode` + `GetViewportRects` + `SpawnEntities` + `ControlsGuide`.
-- **Nueva fuente de audio**: `GameSession.AudioTrackPath` o extender
-  `AudioReactiveMusicController` (UI de selección).
+- **Nueva fuente de audio**: crear un `UserSong` (`UserSong.FromPcm`) y asignarlo a
+  `GameSession.UserSong`; el resto (tramos, pista, villano) se adapta solo.
 - **Nuevo obstáculo**: `ProceduralTrackPlan.ObstacleKind` + `LevelManager` +
   `HazardVisuals`.
 - **Nuevo prop**: `PropKind` + `PropFactory` + `DomainTheme.PropSpec`.

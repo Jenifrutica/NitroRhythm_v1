@@ -70,6 +70,9 @@ namespace NitroRhythm.Core
             AttachVisualModel(entity, modelName, textureName, color);
             AttachPilot(entity, pilotModelName, pilotOffset ?? new Vector3(0f, 0.45f, 0f), color, pilotScale);
 
+            // Procedural kart/pilot animation (lean, pitch, squash, K.O. spin...).
+            NitroRhythm.Player.KartAnimator.Install(entity);
+
             return entity;
         }
 

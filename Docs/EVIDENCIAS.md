@@ -57,7 +57,8 @@ verificación en Play, carpeta con las escenas (máx. 4) + capturas.
 | Justificación de controles | `Docs/Evidencias/GA5-AA3-EV01_Justificacion_Controles.pdf` |
 | Resultado de pruebas | `Docs/Evidencias/RESULTADO_PRUEBAS.pdf` |
 
-- **Estado:** ✅ contenido listo. Falta **comprimir** la carpeta y subirla.
+- **Estado:** ✅ contenido listo y comprimido (`AA3-Ajustes_Unity.zip`). Falta subirlo.
+  La carpeta también contiene `GA5-AA2-EV01_Informe_Hallazgos.pdf` (de AA2).
 
 ---
 
@@ -89,7 +90,10 @@ niveles, mecánicas) con plantilla gratuita + enlace.
 | `AA3-Ajustes_Unity.zip` | 4 escenas + capturas + registros |
 | `AA4-Infografia.zip` | Infografía PDF + enlace Canva |
 
-También hay carpetas equivalentes en `SENA/NitroRythm/Entregas/`.
+También hay carpetas equivalentes en `SENA/NitroRythm/Entregas/`, más
+`Documentacion_Tecnica/` (copias DOCX/PDF de los documentos técnicos).
+En `Downloads/Evidencias_GA5_NitroRhythm/` hay dos carpetas sueltas `AA4-Infografia` y
+`AA4-Infografia (2)`: comprobar cuál es la buena antes de subir.
 
 ---
 

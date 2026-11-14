@@ -2,13 +2,12 @@ using System;
 using System.Collections;
 using NitroRhythm.Core;
 using UnityEngine;
-using UnityEngine.Networking;
 
 namespace NitroRhythm.Audio
 {
     /// <summary>
     /// Owns the gameplay music source. It obtains an AudioClip (user supplied
-    /// file/URL or the built-in generated loop), pre-analyses it into an
+    /// song section or the domain's synthesized track), pre-analyses it into an
     /// <see cref="AudioAnalysisResult"/> and exposes live band energies for
     /// reactive visuals and on-beat gameplay events.
     /// </summary>
@@ -21,10 +20,17 @@ namespace NitroRhythm.Audio
 
         private readonly float[] _spectrum = new float[1024];
         private AudioClip _clip;
+        private bool _ownsClip;
+
+        /// <summary>"Song name · 0:31–1:02" while a user song plays; null with the built-in music.</summary>
+        public string SectionLabel { get; private set; }
 
         public AudioSource Source { get; private set; }
         public AudioAnalysisResult Analysis { get; private set; }
         public bool IsReady { get; private set; }
+
+        /// <summary>Live FFT magnitudes (1024 bins, Blackman window) of the playing music.</summary>
+        public float[] Spectrum => _spectrum;
 
         /// <summary>Live normalized low-band (kick/sub-bass) energy 0..1.</summary>
         public float Bass { get; private set; }
@@ -91,24 +97,42 @@ namespace NitroRhythm.Audio
             GameSession session = GameSession.EnsureExists();
 
             _clip = null;
+            _ownsClip = false;
 
-            if (!string.IsNullOrWhiteSpace(session.AudioTrackPath))
+            // Legacy/test entry point: a path or URL set in the session becomes the user song.
+            if (!session.HasUserSong && !string.IsNullOrWhiteSpace(session.AudioTrackPath))
             {
-                yield return LoadExternalClip(session.AudioTrackPath);
+                SongLoader loader = SongLoader.Instance;
+                yield return loader.LoadFileRoutine(session.AudioTrackPath);
+                if (loader.Result != null) session.UserSong = loader.Result;
+                else Debug.LogWarning($"[AudioReactive] Could not load '{session.AudioTrackPath}': {loader.Error}");
             }
 
-            if (_clip == null)
+            NitroRhythm.Data.LevelDefinition[] playable = NitroRhythm.Data.PrototypeData.Instance.PlayableLevels;
+            int count = Mathf.Max(1, playable.Length);
+            int index = Mathf.Clamp(session.CurrentLevelIndex - 1, 0, count - 1);
+
+            if (session.HasUserSong)
+            {
+                // The player's song: this domain races its own section of it.
+                UserSong song = session.UserSong;
+                _clip = song.CreateSectionClip(index, count);
+                _ownsClip = true;
+                Analysis = song.SectionAnalysis(index, count);
+                song.GetSectionTime(index, count, out float start, out float length);
+                SectionLabel = $"{song.Name} · {UserSong.FormatTime(start)}–{UserSong.FormatTime(start + length)}";
+                Debug.Log($"[AudioReactive] User song '{song.Name}', section {index + 1}/{count} ({SectionLabel}).");
+            }
+            else
             {
                 // Every domain has its own synthesized track (tempo, key, groove, texture).
-                NitroRhythm.Data.LevelDefinition[] playable = NitroRhythm.Data.PrototypeData.Instance.PlayableLevels;
-                int index = Mathf.Clamp(session.CurrentLevelIndex - 1, 0, Mathf.Max(0, playable.Length - 1));
                 string domainId = playable.Length > 0 ? playable[index].id : "default";
-                _clip = DomainMusic.Create(domainId);
+                _clip = DomainMusic.Create(domainId);   // cached by DomainMusic: not ours to destroy
+                Analysis = AudioAnalysisService.Analyze(_clip);
+                SectionLabel = null;
                 Debug.Log($"[AudioReactive] Using the synthesized track of domain '{domainId}'.");
             }
 
-            // Pre-analysis (fast, offline) for deterministic track construction.
-            Analysis = AudioAnalysisService.Analyze(_clip);
             Debug.Log($"[AudioReactive] Analysed '{_clip.name}' — BPM {Analysis.bpm:F1}, beats {Analysis.beatCount}.");
 
             Source.clip = _clip;
@@ -118,25 +142,10 @@ namespace NitroRhythm.Audio
             AnalysisReady?.Invoke(Analysis);
         }
 
-        private IEnumerator LoadExternalClip(string path)
+        private void OnDestroy()
         {
-            string url = path;
-            if (!path.StartsWith("http://") && !path.StartsWith("https://") && !path.StartsWith("file://"))
-            {
-                url = "file://" + path;
-            }
-
-            using UnityWebRequest request = UnityWebRequestMultimedia.GetAudioClip(url, AudioType.UNKNOWN);
-            yield return request.SendWebRequest();
-
-            if (request.result == UnityWebRequest.Result.Success)
-            {
-                _clip = DownloadHandlerAudioClip.GetContent(request);
-            }
-            else
-            {
-                Debug.LogWarning($"[AudioReactive] Could not load '{path}' ({request.error}). Falling back to demo loop.");
-            }
+            if (Instance == this) Instance = null;
+            if (_ownsClip && _clip != null) Destroy(_clip);
         }
 
         public void SetVolume(float volume)

@@ -29,6 +29,8 @@ namespace NitroRhythm.UI
         private float _clock;
         private float _phase;
         private float _scaleTarget = 1f;
+        private float _hop;
+        private SlowBob _bob;
 
         /// <summary>Size factor set by the screen layout so the kart matches its card at any window shape.</summary>
         public float LayoutScale = 1f;
@@ -63,7 +65,7 @@ namespace NitroRhythm.UI
             pivotObject.transform.SetParent(transform, false);
             pivotObject.transform.localPosition = new Vector3(0f, 0.36f, 0f);
             _pivot = pivotObject.transform;
-            pivotObject.AddComponent<SlowBob>();
+            _bob = pivotObject.AddComponent<SlowBob>();
 
             SpawnModel(def, def.kartModel, _pivot, Vector3.zero, Quaternion.Euler(0f, 180f, 0f), 3.8f, true);
             // Pilot FBX faces +Z (like the kart nose); the kart is turned 180 deg, so the pilot must be too.
@@ -118,6 +120,7 @@ namespace NitroRhythm.UI
 
         public void SetSelected(bool selected)
         {
+            if (selected && !IsSelected && _pivot != null) _hop = 1f;   // celebrate the pick: hop + spin
             IsSelected = selected;
             _scaleTarget = selected ? 1.0f : 0.88f;
             _swayAmplitude = selected ? 16f : 10f;
@@ -139,7 +142,20 @@ namespace NitroRhythm.UI
             {
                 _clock += Time.unscaledDeltaTime;
                 float yaw = BaseYaw + (Definition != null ? Definition.modelYawOffset : 0f) + Mathf.Sin(_clock * _swaySpeed + _phase) * _swayAmplitude;
+
+                // Selection hop: a quick jump with a full turn and a squash on landing.
+                float hopY = 0f, squash = 1f;
+                if (_hop > 0f)
+                {
+                    _hop = Mathf.Max(0f, _hop - Time.unscaledDeltaTime / 0.7f);
+                    float k = 1f - _hop;                                   // 0 → 1 over the hop
+                    hopY = Mathf.Sin(Mathf.Clamp01(k / 0.75f) * Mathf.PI) * 0.6f;
+                    yaw += Mathf.SmoothStep(0f, 360f, Mathf.Clamp01(k / 0.75f));
+                    if (k > 0.75f) squash = 1f - Mathf.Sin((k - 0.75f) / 0.25f * Mathf.PI) * 0.12f;
+                }
                 _pivot.localRotation = Quaternion.Euler(0f, yaw, 0f);
+                if (_bob != null) _bob.ExtraY = hopY;
+                _pivot.localScale = new Vector3(1f / Mathf.Sqrt(squash), squash, 1f / Mathf.Sqrt(squash));
             }
 
             transform.localScale = Vector3.Lerp(transform.localScale, Vector3.one * (_scaleTarget * LayoutScale), 1f - Mathf.Exp(-8f * Time.unscaledDeltaTime));
@@ -162,6 +178,9 @@ namespace NitroRhythm.UI
         private Vector3 _origin;
         private float _phase;
 
+        /// <summary>Extra height on top of the bob (selection hop).</summary>
+        public float ExtraY;
+
         private void Start()
         {
             _origin = transform.localPosition;
@@ -170,7 +189,7 @@ namespace NitroRhythm.UI
 
         private void Update()
         {
-            transform.localPosition = _origin + Vector3.up * (Mathf.Sin(Time.unscaledTime * 1.6f + _phase) * 0.04f);
+            transform.localPosition = _origin + Vector3.up * (Mathf.Sin(Time.unscaledTime * 1.6f + _phase) * 0.04f + ExtraY);
         }
     }
 }

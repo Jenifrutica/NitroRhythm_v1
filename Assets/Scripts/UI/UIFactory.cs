@@ -42,6 +42,11 @@ namespace NitroRhythm.UI
         public const string Queue = "";
         public const string Slow = "";
         public const string Enter = "";
+        public const string Folder = "\ue2c7";
+        public const string Upload = "\ue9fc";
+        public const string Library = "\ue030";
+        public const string ArrowUp = "\ue5d8";
+        public const string AudioFile = "\ueb82";
     }
 
     /// <summary>

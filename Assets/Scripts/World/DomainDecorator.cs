@@ -38,6 +38,9 @@ namespace NitroRhythm.World
 
             if (followTarget != null) DomainParticles.Create(Theme, followTarget).transform.SetParent(transform, true);
 
+            // Equalizer walls, light and bloom that move with the music being played.
+            MusicVisualizer.Create(Theme, followTarget, levelManager.TrackHalfWidth, transform);
+
             // Looping ambience of the domain (wind, hum, drone...), at the effects volume.
             AudioSource ambience = gameObject.AddComponent<AudioSource>();
             ambience.clip = NitroRhythm.Audio.AmbientBed.Create(Theme.id);

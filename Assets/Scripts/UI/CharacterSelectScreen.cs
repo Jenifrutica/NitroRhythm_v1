@@ -38,6 +38,8 @@ namespace NitroRhythm.UI
         private readonly Dictionary<GameMode, Image> _modeButtons = new Dictionary<GameMode, Image>();
 
         private TextMeshProUGUI _p1Label, _p2Label;
+        private TextMeshProUGUI _songLabel;
+        private SongPickerPanel _songPanel;
 
         private static readonly string[] ModeLabels = { "1 JUGADOR", "JUGADOR + BOT", "COOPERATIVO", "SHOWDOWN 3P" };
         private static readonly string[] ModeIcons = { UIIcons.Person, UIIcons.Car, UIIcons.Group, UIIcons.Fire };
@@ -177,6 +179,7 @@ namespace NitroRhythm.UI
 
         private void OnDisplayClicked(CharacterDisplay display)
         {
+            if (SongPickerPanel.IsOpen || ControlsOverlay.IsOpen) return;   // 3D clicks pass through the UI
             if (!display.Definition.IsVillain) _p1 = display.Definition.id == _p2 ? _p1 : display.Definition.id;
             Refresh();
         }
@@ -217,10 +220,31 @@ namespace NitroRhythm.UI
                 _modeButtons[mode] = button.GetComponent<Image>();
             }
 
-            UIFactory.CreateButton(_canvas.transform, "INICIAR CARRERA", new Vector2(0f, -475f), new Vector2(500f, 80f), UIFactory.NeonCyan, Play, UIIcons.Rocket);
+            UIFactory.CreateButton(_canvas.transform, "INICIAR CARRERA", new Vector2(0f, -475f), new Vector2(460f, 80f), UIFactory.NeonCyan, Play, UIIcons.Rocket);
+
+            // Player's own song: the whole campaign is built from it.
+            UIFactory.CreateButton(_canvas.transform, "TU CANCIÓN", new Vector2(-418f, -475f), new Vector2(320f, 64f), UIFactory.NeonPink,
+                () => _songPanel.Show(), UIIcons.Library);
+            _songLabel = UIFactory.CreateText(_canvas.transform, "SongLabel", "", 24f, UIFactory.TextSoft, TextAlignmentOptions.Left);
+            _songLabel.rectTransform.anchoredPosition = new Vector2(430f, -475f);
+            _songLabel.rectTransform.sizeDelta = new Vector2(360f, 70f);
+            _songLabel.enableWordWrapping = true;
+            _songLabel.overflowMode = TextOverflowModes.Ellipsis;
             UIFactory.CreateButton(_canvas.transform, "CONTROLES", new Vector2(760f, -475f), new Vector2(300f, 64f), UIFactory.NeonGold,
                 () => ControlsOverlay.Show(_mode, false, null, "ESPACIO PARA CERRAR"), UIIcons.Gamepad);
             UIFactory.CreateButton(_canvas.transform, "MENÚ", new Vector2(-760f, -475f), new Vector2(260f, 64f), UIFactory.NeonBlue, () => SceneFlow.LoadMainMenu(), UIIcons.Home);
+
+            _songPanel = SongPickerPanel.Create(_canvas.transform);
+            _songPanel.SongChanged += RefreshSongLabel;
+            RefreshSongLabel();
+        }
+
+        private void RefreshSongLabel()
+        {
+            GameSession session = GameSession.EnsureExists();
+            _songLabel.text = session.HasUserSong
+                ? $"<color=#FF4DBF>MÚSICA</color>\n{session.UserSong.Name} · {Mathf.RoundToInt(session.UserSong.Analysis.bpm)} BPM"
+                : "<color=#FF4DBF>MÚSICA</color>\nLa del juego (una por dominio)";
         }
 
         private void BuildCard(CharacterDefinition def, float anchorX)
@@ -354,6 +378,8 @@ namespace NitroRhythm.UI
             foreach (var pair in _modeButtons)
             {
                 pair.Value.color = pair.Key == _mode ? new Color(0.45f, 0.34f, 0.04f, 1f) : new Color(0.1f, 0.09f, 0.04f, 0.95f);
+                UIHoverEffect hover = pair.Value.GetComponent<UIHoverEffect>();
+                if (hover != null) hover.Highlighted = pair.Key == _mode;
             }
             foreach (CharacterDisplay display in _displays)
             {

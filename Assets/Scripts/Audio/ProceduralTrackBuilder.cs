@@ -42,14 +42,24 @@ namespace NitroRhythm.Audio
             int warmupSegments = Mathf.RoundToInt(Mathf.Lerp(3f, 1f, ramp));
 
             int maxSegments = 48;
-            int beats = Mathf.Min(analysis.beatCount, maxSegments * 2);
+            // Long sections (player songs, fast tempos) fold several beats into one segment so the
+            // whole section shapes the track instead of only its first 48 beats.
+            int segmentTotal = Mathf.Min(maxSegments, analysis.beatCount);
+            float beatsPerSegment = analysis.beatCount / (float)Mathf.Max(1, segmentTotal);
             int segmentIndex = 0;
             float x = levelStartX;
 
-            for (int beat = 0; beat < beats && segmentIndex < maxSegments; beat++)
+            while (segmentIndex < segmentTotal)
             {
-                float bass = analysis.Normalized(analysis.GetBass(beat));
-                float treble = analysis.Normalized(analysis.GetTreble(beat));
+                int beat = segmentIndex;   // pattern counter (pads every 4th, extra hazards every 3rd)
+                int firstBeat = Mathf.FloorToInt(segmentIndex * beatsPerSegment);
+                int endBeat = Mathf.Max(firstBeat + 1, Mathf.FloorToInt((segmentIndex + 1) * beatsPerSegment));
+                float bass = 0f, treble = 0f;
+                for (int b = firstBeat; b < endBeat && b < analysis.beatCount; b++)
+                {
+                    bass = Mathf.Max(bass, analysis.Normalized(analysis.GetBass(b)));
+                    treble = Mathf.Max(treble, analysis.Normalized(analysis.GetTreble(b)));
+                }
                 bool kick = bass > 0.45f;
 
                 TrackSegment segment = new TrackSegment

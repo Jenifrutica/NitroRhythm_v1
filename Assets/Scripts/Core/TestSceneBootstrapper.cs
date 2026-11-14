@@ -305,6 +305,10 @@ namespace NitroRhythm.Core
             follow.Target = target;
             follow.Offset = _cameraOffset;
             follow.Smoothing = _cameraSmoothing;
+            follow.LookAhead = 7f;          // frame the road ahead, not the void under the kart
+            follow.LookHeightOffset = 0.8f;
+            follow.DynamicFov = true;
+            follow.BaseFov = camera.fieldOfView;
         }
 
         // --------------------------------------------------------------- systems

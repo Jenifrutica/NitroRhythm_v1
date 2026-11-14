@@ -18,7 +18,11 @@ namespace NitroRhythm.UI
         private RectTransform _rect;
         private Image _image;
         private Color _baseColor;
+        private Color _lastApplied;
         private bool _hovered;
+
+        /// <summary>Selected state (e.g. the chosen game mode): brighter halo and slightly larger.</summary>
+        public bool Highlighted { get; set; }
         private bool _pressed;
 
         private Image _glow;
@@ -30,7 +34,7 @@ namespace NitroRhythm.UI
         {
             _rect = GetComponent<RectTransform>();
             _image = GetComponent<Image>();
-            if (_image != null) _baseColor = _image.color;
+            if (_image != null) _baseColor = _lastApplied = _image.color;
         }
 
         /// <summary>Registers the halo image whose alpha follows the hover state.</summary>
@@ -56,22 +60,25 @@ namespace NitroRhythm.UI
         {
             if (_rect == null) return;
 
-            float targetScale = _pressed ? _pressScale : (_hovered ? _hoverScale : 1f);
+            float targetScale = _pressed ? _pressScale : (_hovered ? _hoverScale : (Highlighted ? 1.03f : 1f));
             float t = 1f - Mathf.Exp(-_speed * Time.unscaledDeltaTime);
             _rect.localScale = Vector3.Lerp(_rect.localScale, Vector3.one * targetScale, t);
 
             if (_image != null)
             {
+                // Someone else (e.g. a selection Refresh) recoloured the button: that is the new base.
+                if (_image.color != _lastApplied) _baseColor = _image.color;
                 Color target = _hovered
                     ? new Color(Mathf.Min(1f, _baseColor.r * 1.6f), Mathf.Min(1f, _baseColor.g * 1.6f), Mathf.Min(1f, _baseColor.b * 1.6f), _baseColor.a)
                     : _baseColor;
                 _image.color = Color.Lerp(_image.color, target, t);
+                _lastApplied = _image.color;
             }
 
             if (_glow != null)
             {
                 float pulse = _hovered ? 1f + 0.12f * Mathf.Sin(Time.unscaledTime * 6f) : 1f;
-                float alpha = (_hovered ? _glowHover : _glowBase) * pulse;
+                float alpha = (_hovered || Highlighted ? _glowHover : _glowBase) * pulse;
                 Color c = _glow.color;
                 c.a = Mathf.Lerp(c.a, alpha, t);
                 _glow.color = new Color(_glowColor.r, _glowColor.g, _glowColor.b, c.a);

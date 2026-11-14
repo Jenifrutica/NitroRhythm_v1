@@ -83,6 +83,14 @@ namespace NitroRhythm.Core
         /// <summary>Pre-analysed music (null when using the built-in generated track).</summary>
         public AudioAnalysisResult Analysis;
 
+        /// <summary>
+        /// Song chosen by the player (null = each domain uses its own synthesized music). Every
+        /// domain races its own consecutive section of this song (see <see cref="UserSong.GetSection"/>).
+        /// </summary>
+        [System.NonSerialized] public UserSong UserSong;
+
+        public bool HasUserSong => UserSong != null && UserSong.Samples.Length > 0;
+
         public static GameSession EnsureExists()
         {
             if (Instance != null) return Instance;

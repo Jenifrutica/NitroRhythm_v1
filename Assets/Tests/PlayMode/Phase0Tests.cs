@@ -175,8 +175,8 @@ namespace NitroRhythm.Tests
                 yield return null;
                 yield return null;
 
-                Transform visual = kart.transform.Find($"{def.kartModel}_Visual");
-                Transform pilot = kart.transform.Find($"{def.pilotModel}_Pilot");
+                Transform visual = FindDeep(kart.transform, $"{def.kartModel}_Visual");
+                Transform pilot = FindDeep(kart.transform, $"{def.pilotModel}_Pilot");
                 Assert.IsNotNull(visual, $"{def.id}: el kart debe mostrar su modelo real, no un cubo.");
                 Assert.IsNotNull(pilot, $"{def.id}: el piloto debe aparecer en carrera.");
 
@@ -191,6 +191,16 @@ namespace NitroRhythm.Tests
                 Object.Destroy(kart);
                 yield return null;
             }
+        }
+
+        /// <summary>The kart models live under the animation rig, so search the whole hierarchy.</summary>
+        private static Transform FindDeep(Transform root, string name)
+        {
+            foreach (Transform t in root.GetComponentsInChildren<Transform>(true))
+            {
+                if (t.name == name) return t;
+            }
+            return null;
         }
     }
 }
