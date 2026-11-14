@@ -67,7 +67,24 @@ Arrastrar la carpeta `Builds/WebGL` a *app.netlify.com/drop*. Sin configuración
 
 ---
 
-## 3. Recomendación
+## 3. Otros sitios donde publicar
+
+| Sitio | Qué admite | Coste / requisitos | Notas |
+| :-- | :-- | :-- | :-- |
+| **Netlify Drop** | Web | Gratis; arrastrar `Builds/WebGL` a *app.netlify.com/drop* | Enlace en 1 minuto. |
+| **Cloudflare Pages / Vercel / Firebase Hosting** | Web | Gratis; CLI o conexión al repo | Similares a Netlify. |
+| **itch.io** | Web + Windows/Linux/macOS | Gratis; cuenta propia | Página privada con contraseña; actualizaciones con `butler push`. |
+| **Game Jolt** | Web + descargas | Gratis; cuenta | Comunidad indie. |
+| **Unity Play** (play.unity.com) | Web | Gratis; cuenta Unity | Solo WebGL. |
+| **Newgrounds** | Web | Gratis; revisión de la comunidad | Portal clásico de juegos web. |
+| **CrazyGames / Poki** | Web | Revisión; a veces piden su SDK | Mucho público y anuncios; prefieren 1 jugador con ratón/táctil (el multijugador en un teclado es una desventaja). |
+| **Steam** | Escritorio | 100 USD, página de tienda, revisión, builds firmadas | Excesivo para el prototipo. |
+| **Microsoft Store / Flathub** | Windows / Linux | Empaquetado y firma específicos | Posible a futuro. |
+| **Google Play** | Android | Build Android + controles táctiles | Aún no existe. |
+
+---
+
+## 4. Recomendación
 
 1. **Web (GitHub Pages o itch.io)** como enlace principal: nadie instala nada y la función
    *TU CANCIÓN* usa el selector del navegador.
