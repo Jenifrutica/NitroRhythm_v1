@@ -105,7 +105,7 @@ Archivo en `SENA/NitroRythm/Builds/`:
 - `Jugar_Linux.sh`, `Jugar_NitroRhythm.sh` (lanzadores).
 - `WebGL/`: build del **2026-10-01** (vieja; no usar como referencia).
 
-Release: https://github.com/Jenifrutica/NitroRhythm_v1/releases/tag/v1.3
+Release: https://github.com/Jenifrutica/NitroRhythm_v1/releases/tag/v1.5
 
 ---
 

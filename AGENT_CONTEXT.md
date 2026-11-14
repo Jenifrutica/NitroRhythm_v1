@@ -20,7 +20,7 @@
   jugador**, pista al compás, pilotos con huesos y animaciones, transición 2D y ejecutables
   Linux/Windows/macOS/Web (ronda 6). Pruebas: 75 PlayMode (63 OK, 12 omitidas) + 4 EditMode OK, 0 fallos (2026-11-14).
 - **Repo:** https://github.com/Jenifrutica/NitroRhythm_v1 (público) · `main` limpio.
-- **Release:** https://github.com/Jenifrutica/NitroRhythm_v1/releases/tag/v1.3
+- **Release:** https://github.com/Jenifrutica/NitroRhythm_v1/releases/tag/v1.5 (Web, Windows, Linux, macOS)
 - **No hay nada pendiente de commit.** `git status` vacío.
 
 ### Primeros 10 minutos (haz esto)
@@ -301,5 +301,5 @@ Ver `Docs/PENDING.md` para el detalle. Resumen:
 ## 11. Enlaces
 
 - Repo: https://github.com/Jenifrutica/NitroRhythm_v1
-- Release v1.3: https://github.com/Jenifrutica/NitroRhythm_v1/releases/tag/v1.3
+- Release v1.5: https://github.com/Jenifrutica/NitroRhythm_v1/releases/tag/v1.5
 - Release v1.0 (referencia “antes”): https://github.com/Jenifrutica/NitroRhythm_v1/releases/tag/v1.0-prototype
